@@ -80,6 +80,29 @@ EXCLUDE_COMMON = [
     r"\bpaid\b|\bcustomer\b",
 ]
 
+# -------- Router de Proyectos (PM) --------
+PM_PATTERN = r"(?:\bproject (manager|lead|director)\b|\bjefe de proyecto(s)?\b|\bgestor de proyecto(s)?\b|\bpm\b|\bdirect(or|ora) de proyecto(s)?\b)"
+
+TECH_HINTS = [
+    r"\b(it|ti)\b", r"\bsistemas\b", r"\btechnology\b|\btech\b",
+    r"\binformatic[ao]\b|\binformation\b",
+    r"\bsoftware\b|\bplatform\b", r"\barquitectur[ao]?\b|\barchitecture\b",
+    r"\binfraestructura\b|\binfrastructure\b",
+    r"\bsecurity\b|\bseguridad\b",
+    r"\bcloud\b|\bnube\b|aws|azure|\bgcp\b|\bgoogle cloud\b",
+    r"\bdevops\b", r"\bdata\b|bi|analytics?"
+]
+
+MKT_HINTS = [
+    r"\bmarketing\b", r"\bbrand(ing)?\b|\bmarca\b", r"\bcontent\b|\bcontenid[oa]\b",
+    r"\bcomunicaciones?\b|\bcomms\b|communications?",
+    r"\bpublicidad\b|\badvertis(ing|ement|ements)?\b|paid media",
+    r"\bseo\b|\bsem\b|\bperformance\b|\bgrowth\b|\bautomation\b|\bemail\b|social media|redes sociales"
+]
+
+OPS_HINTS = [
+    r"\boperaciones\b|\boperations\b|\bops\b",
+
 
 # ---------------- Seniorities genéricos (forman “{seniority} de {área}”) ----------------
 GEN_SENIORITIES: List[Tuple[str, str]] = [
@@ -387,6 +410,31 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
         if any(re.search(p, t, re.I) for p in pats):
             return {"input": original, "is_icp": True, "department": dep_fn, "role_generic": label, "why": {"matched": label}}
 
+        # --- Router específico para Proyectos (PM / Director de Proyectos) ---
+    if re.search(PM_PATTERN, t, re.I):
+        # Detectamos contexto
+        if any_match(t, TECH_HINTS):
+            dep = "Tecnologia"
+        elif any_match(t, MKT_HINTS):
+            dep = "Marketing"
+        elif any_match(t, OPS_HINTS):
+            dep = "Operaciones"
+        else:
+            # Preferencia por Tecnología cuando no hay contexto claro
+            dep = "Tecnologia"
+
+        # Etiqueta por seniority -> "... de proyectos"
+        sen = seniority_label(t) or "responsables"
+        label = f"{sen} de proyectos"
+
+        return {
+            "input": original,
+            "is_icp": True,
+            "department": dep,
+            "role_generic": label,
+            "why": {"matched": "pm_router", "department_routed": dep}
+        }
+            
     # Tie-break Marketing sobre Ventas
     marketing_signal = bool(re.search(r"\bmarketing\b", t, re.I))
 
