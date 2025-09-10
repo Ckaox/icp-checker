@@ -4,9 +4,9 @@ from pydantic import BaseModel
 import re, unicodedata
 from typing import List, Dict, Any, Tuple, Optional
 
-app = FastAPI(title="ICP + Dept + Role (rule-engine)")
+app = FastAPI(title="ICP + Dept + Role (areas+seniority engine)")
 
-# ---------- Utils ----------
+# ---------------- Utils ----------------
 def norm(s: str) -> str:
     s = (s or "").strip().lower()
     s = unicodedata.normalize("NFD", s)
@@ -29,26 +29,8 @@ def to_regex(items: List[str]) -> List[str]:
 def any_match(text: str, patterns: List[str]) -> bool:
     return any(re.search(p, text, re.I) for p in patterns) if patterns else False
 
-def dynamic_role_label(dep: str, text: str) -> str:
-    pairs = [
-        (r"\bvice ?president(e)?\b|\bvp\b",                         "vicepresidentes"),
-        (r"\bhead\b|\bdirect(or|ora)\b",                            "directores"),
-        (r"\bmanager\b|\bgerente\b",                                "gerentes"),
-        (r"\bjef[ea]\b|\bprincipal\b|\blead\b",                     "jefes"),
-        (r"\bcoordinador(a)?\b|\bcoordinator\b",                    "coordinadores"),
-        (r"\bresponsable\b",                                        "responsables"),
-        (r"\bcontroller\b|\bcontrolador\b",                         "responsables de control de gestión"),
-        (r"\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b",       "responsables contables"),
-        (r"\bstrategist\b|\bestratega\b",                           "estrategas"),
-        (r"\bejecutiv[oa]s?\b|\bexecutive\b",                       "ejecutivos"),
-        (r"\bgestor(es)?\b",                                        "gestores"),
-    ]
-    for pat, lbl in pairs:
-        if re.search(pat, text, re.I):
-            return f"{lbl} de {dep.lower()}"
-    return f"encargados de {dep.lower()}"
 
-# ---------- Owners & C-suite (prioridad máxima) ----------
+# ---------------- Owners & C-Suite (prioridad máxima) ----------------
 OWNERS = [
     r"\bfounder(s)?\b", r"\bco[- ]?founder(s)?\b",
     r"\bowner(s)?\b", r"\bpropietari[oa]s?\b",
@@ -71,7 +53,9 @@ C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bcao\\b","chief administrat(ive|ion) officer"],              "CAOs",          "C-Suite"),
 ]
 
-# ---------- Seniority / Excludes comunes (sin C-levels) ----------
+
+# ---------------- Seniority / Excludes comunes (sin C-levels) ----------------
+# Mantenemos esto para gatear ICP (must + seniority) y para fallback si no hay área
 SENIORITY_COMMON = [
     r"\bvp\b|\bvice ?president(e)?\b",
     r"\bhead\b|\bdirect(or|ora)\b|\bdireccion\b|\bdirecci[oó]n\b",
@@ -96,7 +80,29 @@ EXCLUDE_COMMON = [
     r"\bpaid\b|\bcustomer\b",
 ]
 
-# ---------- Áreas (sinónimos ES/EN) ----------
+
+# ---------------- Seniorities genéricos (forman “{seniority} de {área}”) ----------------
+GEN_SENIORITIES: List[Tuple[str, str]] = [
+    (r"(?:\bhead\b|\bdirect(or|ora)\b|VP|vice ?president(e)?)", "directores"),
+    (r"(?:\bmanager\b|\bgerente\b)",                            "gerentes"),
+    (r"(?:\bjef[ea]\b|\bprincipal\b|\blead\b)",                 "jefes"),
+    (r"(?:\bcoordinador(a)?\b|\bcoordinator\b)",                "coordinadores"),
+    (r"\bresponsable\b",                                        "responsables"),
+    (r"(?:\bcontroller\b|\bcontrolador\b)",                     "responsables de control de gestión"),
+    (r"(?:\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b)",   "responsables contables"),
+    (r"(?:\bstrategist\b|\bestratega\b)",                       "estrategas"),
+    (r"(?:\bejecutiv[oa]s?\b|\bexecutive\b)",                   "ejecutivos"),
+    (r"(?:\bgestor(es)?\b)",                                    "gestores"),
+]
+
+def seniority_label(text: str) -> Optional[str]:
+    for pat, plural in GEN_SENIORITIES:
+        if re.search(pat, text, re.I):
+            return plural
+    return None
+
+
+# ---------------- Áreas por departamento (sinónimos ES/EN) ----------------
 TECH_AREAS = {
     "sistemas":         r"(?:\bsystem(s)?\b|\b(it\s*)?systems?\b|sistemas?)",
     "redes":            r"(?:\bnetwork(s)?\b|redes?)",
@@ -124,10 +130,10 @@ MKT_AREAS = {
     "email":            r"\bemail\b",
     "automatización":   r"\bautomation\b|\bmarketing automation\b|hubspot|marketo",
     "inbound":          r"\binbound\b",
-    "performance":      r"\bperformance\b|growth",
+    "performance":      r"(?:\bperformance\b|growth)",
     "social":           r"(?:social media|redes sociales|community)",
-    "seo":              r"\bseo\b|search engine optimization",
-    "sem":              r"\bsem\b|paid search|google ads",
+    "seo":              r"(?:\bseo\b|search engine optimization)",
+    "sem":              r"(?:\bsem\b|paid search|google ads)",
 }
 
 SALES_AREAS = {
@@ -146,11 +152,11 @@ FIN_AREAS = {
     "contabilidad":        r"(?:\baccounting\b|\bcontabilidad\b|\baccount\b|\bcontador(a)?\b|\bcontable(s)?\b)",
     "control de gestión":  r"(?:\bcontroller\b|\bcontrolador\b|\bcontrol de gesti[oó]n\b)",
     "finanzas":            r"(?:\bfinance\b|\bfinancial\b|\bfinanzas?\b|\bfinanciera\b)",
-    "fiscalidad":          r"\bfiscal\b|tax",
+    "fiscalidad":          r"(?:\bfiscal\b|tax)",
     "tesorería":           r"(?:\btreasury\b|\btesorer[ií]a\b|cash management)",
-    "ar":                  r"\baccounts? receivable\b|\bcuentas? por cobrar\b|\bar\b",
-    "ap":                  r"\baccounts? payable\b|\bcuentas? por pagar\b|\bap\b",
-    "fp&a":                r"\bfp&a\b|\bfinancial planning\b|\bplanning & analysis\b",
+    "ar":                  r"(?:accounts? receivable|cuentas? por cobrar|\bar\b)",
+    "ap":                  r"(?:accounts? payable|cuentas? por pagar|\bap\b)",
+    "fp&a":                r"(?:\bfp&a\b|financial planning|planning & analysis)",
     "inversiones":         r"(?:investment|inversiones|asset management|portafolio|portfolio)",
     "auditoría":           r"(?:audit(?:ing)?|auditor[ií]a|auditor)",
     "riesgo":              r"(?:risk|riesgo)",
@@ -187,97 +193,117 @@ OPS_AREAS = {
     "fulfillment":        r"(?:fulfillment|operaci[oó]n de pedidos|preparaci[oó]n de pedidos)",
     "servicio":           r"(?:servicio al cliente|customer service|soporte|support)",
     "calidad":            r"(?:quality|calidad|qa operaciones)",
-    "h&s":                r"(?:seguridad e higiene|hse|eHS|health & safety|seguridad industrial)",
+    "h&s":                r"(?:seguridad e higiene|hse|ehs|health & safety|seguridad industrial)",
 }
 
-# ---------- Acciones (labels o plantillas) ----------
-GEN_ACTIONS = [
-    {"re": r"(?:\bhead\b|\bdirect(or|ora)\b|VP|vice ?president(e)?)", "template": "directores de {area}"},
-    {"re": r"(?:\bmanager\b|\bgerente\b)",                            "template": "gerentes de {area}"},
-    {"re": r"(?:\bjef[ea]\b|\bprincipal\b|\blead\b)",                 "template": "jefes de {area}"},
-    {"re": r"(?:\bcoordinador(a)?\b|\bcoordinator\b)",                "template": "coordinadores de {area}"},
-    {"re": r"\bresponsable\b",                                        "template": "responsables de {area}"},
+
+# ---------------- Reglas especiales (labels fijos por depto) ----------------
+# Tecnología: sysadmin/netadmin/QA/PM/DevOps, etc.
+SPECIAL_TECH: List[Tuple[str, str]] = [
+    (r"(?:\b(it\s*)?systems?\s*admin(?:istrator)?\b|\bsys\s*admin\b|\bsysadmin\b)", "administradores de sistemas"),
+    (r"(?:\bnetwork\s*admin(?:istrator)?\b|\bredes?\s*admin(?:istrador|istradora)?\b)", "administradores de redes"),
+    (r"systems?\s*and\s*network\s*admin(?:istrator)?", "administradores de sistemas"),
+    (TECH_AREAS["qa"],        "líderes de qa"),
+    (TECH_AREAS["proyectos"], "project managers"),
+    (r"\bdevops\b",           "devops"),
 ]
 
-TECH_ACTIONS = [
-    {"re": r"(?:\b(it\s*)?systems?\s*admin(?:istrator)?\b|\bsys\s*admin\b|\bsysadmin\b)", "label": "administradores de sistemas"},
-    {"re": r"(?:\bnetwork\s*admin(?:istrator)?\b|\bredes?\s*admin(?:istrador|istradora)?\b)", "label": "administradores de redes"},
-    {"re": r"systems?\s*and\s*network\s*admin(?:istrator)?", "label": "administradores de sistemas"},
-    {"re": TECH_AREAS["qa"],        "label": "líderes de qa"},
-    {"re": TECH_AREAS["proyectos"], "label": "project managers"},
-    {"re": r"\bdevops\b",           "label": "devops"},
-    *GEN_ACTIONS,
+# Marketing: atajos comunes
+SPECIAL_MKT: List[Tuple[str, str]] = [
+    (r"\bbrand(ing)?\b.*\bmanager\b|\bbrand manager\b",   "gerentes de marca"),
+    (r"\bcontent\b.*\bmanager\b|\bcontent manager\b",     "gerentes de contenido"),
 ]
 
-MKT_ACTIONS = [
-    {"re": r"\bbrand(ing)?\b.*\bmanager\b|\bbrand manager\b",   "label": "gerentes de marca"},
-    {"re": r"\bcontent\b.*\bmanager\b|\bcontent manager\b",     "label": "gerentes de contenido"},
-    *GEN_ACTIONS,
+# Ventas: atajos comunes
+SPECIAL_SALES: List[Tuple[str, str]] = [
+    (r"\baccount manager\b",   "account managers"),
+    (r"\baccount executive\b", "account executives"),
 ]
 
-SALES_ACTIONS = [
-    {"re": r"\baccount manager\b",   "label": "account managers"},
-    {"re": r"\baccount executive\b", "label": "account executives"},
-    *GEN_ACTIONS,
+# Finanzas: roles “bonitos”
+SPECIAL_FIN: List[Tuple[str, str]] = [
+    (FIN_AREAS["control de gestión"], "responsables de control de gestión"),
+    (r"(?:\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b)", "responsables contables"),
+    (FIN_AREAS["tesorería"],  "responsables de tesorería"),
+    (FIN_AREAS["fiscalidad"], "responsables fiscales"),
+    (FIN_AREAS["ar"],         "responsables de cuentas por cobrar"),
+    (FIN_AREAS["ap"],         "responsables de cuentas por pagar"),
+    (FIN_AREAS["fp&a"],       "responsables de FP&A"),
 ]
 
-FIN_ACTIONS = [
-    {"re": FIN_AREAS["control de gestión"], "label": "responsables de control de gestión"},
-    {"re": r"(?:\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b)", "label": "responsables contables"},
-    {"re": FIN_AREAS["tesorería"],  "label": "responsables de tesorería"},
-    {"re": FIN_AREAS["fiscalidad"], "label": "responsables fiscales"},
-    {"re": FIN_AREAS["ar"],         "label": "responsables de cuentas"},
-    {"re": FIN_AREAS["ap"],         "label": "responsables de cuentas"},
-    {"re": FIN_AREAS["fp&a"],       "label": "responsables de FP&A"},
-    *GEN_ACTIONS,
+# RRHH
+SPECIAL_HR: List[Tuple[str, str]] = [
+    (r"(?:recruit(ing|er)?|selecci[oó]n|acquisition|acquisitions?)", "reclutadores"),
+    (r"(?:hrbp|people partner|business partner)",                   "business partners de rr. hh."),
+    (r"(?:payroll|n[oó]mina)",                                      "responsables de nómina"),
+    (r"(?:compensation|benefits|total rewards|compensaciones|beneficios)", "responsables de compensaciones y beneficios"),
+    (r"(?:training|learning|l&d|learning and development|capacitaci[oó]n)", "responsables de capacitación"),
 ]
 
-HR_ACTIONS = [
-    {"re": r"(?:recruit(ing|er)?|selecci[oó]n|acquisition|acquisitions?)", "label": "reclutadores"},
-    {"re": r"(?:hrbp|people partner|business partner)",                   "label": "business partners de rr. hh."},
-    {"re": r"(?:payroll|n[oó]mina)",                                      "label": "responsables de nómina"},
-    {"re": r"(?:compensation|benefits|total rewards|compensaciones|beneficios)", "label": "responsables de compensaciones y beneficios"},
-    {"re": r"(?:training|learning|l&d|learning and development|capacitaci[oó]n)", "label": "responsables de capacitación"},
-    *GEN_ACTIONS,
+# Legal
+SPECIAL_LEGAL: List[Tuple[str, str]] = [
+    (r"(?:general counsel|gc\b)",                                   "general counsels"),
+    (r"(?:counsel|abogad[oa]s?|asesor(?:a)? legal)",                "asesores legales"),
+    (r"(?:contracts?|contratos?)",                                  "responsables de contratos"),
+    (r"(?:compliance|cumplimiento|regulatorio|regulatory|governance|gobernanza)", "responsables de compliance"),
+    (r"(?:privacy|privacidad|gdpr|ccpa|data protection)",           "responsables de privacidad"),
 ]
 
-LEGAL_ACTIONS = [
-    {"re": r"(?:general counsel|gc\b)",                                   "label": "general counsels"},
-    {"re": r"(?:counsel|abogad[oa]s?|asesor(?:a)? legal)",                "label": "asesores legales"},
-    {"re": r"(?:contracts?|contratos?)",                                  "label": "responsables de contratos"},
-    {"re": r"(?:compliance|cumplimiento|regulatorio|regulatory|governance|gobernanza)", "label": "responsables de compliance"},
-    {"re": r"(?:privacy|privacidad|gdpr|ccpa|data protection)",           "label": "responsables de privacidad"},
-    *GEN_ACTIONS,
+# Operaciones
+SPECIAL_OPS: List[Tuple[str, str]] = [
+    (r"(?:log[íi]stica|logistics|warehouse|almac[eé]n|last mile)",  "responsables de logística"),
+    (r"(?:supply ?chain|cadena de suministro|procurement|compras|planning|s&op)", "responsables de supply chain"),
+    (r"(?:fulfillment|operaci[oó]n de pedidos|preparaci[oó]n de pedidos)", "responsables de fulfillment"),
+    (r"(?:customer service|servicio al cliente|soporte|support)",   "responsables de servicio al cliente"),
+    (r"(?:health & safety|seguridad e higiene|hse|ehs|seguridad industrial)", "responsables de seguridad e higiene"),
 ]
 
-OPS_ACTIONS = [
-    {"re": r"(?:log[íi]stica|logistics|warehouse|almac[eé]n|last mile)",  "label": "responsables de logística"},
-    {"re": r"(?:supply ?chain|cadena de suministro|procurement|compras|planning|s&op)", "label": "responsables de supply chain"},
-    {"re": r"(?:fulfillment|operaci[oó]n de pedidos|preparaci[oó]n de pedidos)", "label": "responsables de fulfillment"},
-    {"re": r"(?:customer service|servicio al cliente|soporte|support)",   "label": "responsables de servicio al cliente"},
-    {"re": r"(?:health & safety|seguridad e higiene|hse|ehs|seguridad industrial)", "label": "responsables de seguridad e higiene"},
-    *GEN_ACTIONS,
-]
 
-# ---------- Dept config (orden importa; Marketing > Ventas tie-break) ----------
+# ---------------- Motor: “especiales” -> “{seniority} de {área}” ----------------
+def detect_first(text: str, pairs: List[Tuple[str, str]]) -> Optional[str]:
+    for pat, label in pairs:
+        if re.search(pat, text, re.I):
+            return label
+    return None
+
+def detect_area(text: str, areas: Dict[str, str]) -> Optional[str]:
+    for area, pat in areas.items():
+        if re.search(pat, text, re.I):
+            return area
+    return None
+
+def label_by_area_and_seniority(dep: str, text: str, areas: Dict[str, str], specials: List[Tuple[str, str]]) -> Optional[str]:
+    # 1) Reglas especiales
+    sp = detect_first(text, specials)
+    if sp:
+        return sp
+    # 2) Genérico: {seniority} de {área} (si hay ambas; si no hay área, usamos depto)
+    sen = seniority_label(text)
+    if not sen:
+        return None
+    area = detect_area(text, areas)
+    return f"{sen} de {(area or dep).lower()}"
+
+
+# ---------------- Dept config (orden importa; tie-break Marketing > Ventas) ----------------
 DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
     ("Marketing", {
         "must": [r"\bmarketing\b"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\btrade\b", r"\bperformance\b", r"\bproduct\b", r"\bads\b", r"\barea\b", r"\baccount\b"],
-        "areas": MKT_AREAS, "actions": MKT_ACTIONS,
+        "areas": MKT_AREAS, "specials": SPECIAL_MKT,
     }),
     ("Tecnologia", {
         "must": [
             r"\b(it|ti)\b", r"\bsistemas\b", r"\btechnology\b|\btech\b",
             r"\binformatic[ao]\b|\binformation\b",
             r"\bsoftware\b|\bplatform\b", r"\barquitectur[ao]?\b|\barchitecture\b",
-            r"\binfraestructura\b|\binfrastructure\b", r"\boperaciones\b|\boperations\b",
+            r"\binfraestructura\b|\binfrastructure\b",
             r"\bsecurity\b|\bseguridad\b",
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\bdesarrollo ?de ?negocio\b|\bbusiness ?development\b"],
-        "areas": TECH_AREAS, "actions": TECH_ACTIONS,
+        "areas": TECH_AREAS, "specials": SPECIAL_TECH,
     }),
     ("Ventas", {
         "must": [
@@ -289,7 +315,7 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\bmarketing\b"],
-        "areas": SALES_AREAS, "actions": SALES_ACTIONS,
+        "areas": SALES_AREAS, "specials": SPECIAL_SALES,
     }),
     ("Finanzas", {
         "must": [
@@ -300,47 +326,30 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "seniority": SENIORITY_COMMON + [r"\bfiscal\b", r"\bcontroller\b|\bcontrolador\b",
                                          r"\badministraci[oó]n\b|\badministrador(a)?\b|\badministrativ[oa]s?\b"],
         "exclude": EXCLUDE_COMMON + [r"\bkey\b"],
-        "areas": FIN_AREAS, "actions": FIN_ACTIONS,
+        "areas": FIN_AREAS, "specials": SPECIAL_FIN,
     }),
     ("RR. HH.", {
         "must": [r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|talent)"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
-        "areas": HR_AREAS, "actions": HR_ACTIONS,
+        "areas": HR_AREAS, "specials": SPECIAL_HR,
     }),
     ("Legal", {
         "must": [r"(?:legal|jur[ií]dico|law|legal affairs|asuntos legales|compliance|contracts?)"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
-        "areas": LEGAL_AREAS, "actions": LEGAL_ACTIONS,
+        "areas": LEGAL_AREAS, "specials": SPECIAL_LEGAL,
     }),
     ("Operaciones", {
         "must": [r"(?:operaciones|operations|ops|log[íi]stica|logistics|supply ?chain|fulfillment|warehouse|almac[eé]n)"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
-        "areas": OPS_AREAS, "actions": OPS_ACTIONS,
+        "areas": OPS_AREAS, "specials": SPECIAL_OPS,
     }),
 ]
 
-# ---------- Helpers de plantillas ----------
-def detect_area(text: str, areas: Dict[str, str]) -> Optional[str]:
-    for area, pat in areas.items():
-        if re.search(pat, text, re.I):
-            return area
-    return None
 
-def dept_label_from_templates(text: str, areas: Dict[str, str], actions: List[Dict[str, str]]) -> Optional[str]:
-    for act in actions:
-        if re.search(act["re"], text, re.I):
-            if "label" in act:
-                return act["label"]
-            if "template" in act:
-                area = detect_area(text, areas)
-                if area:
-                    return act["template"].format(area=area)
-    return None
-
-# ---------- IO ----------
+# ---------------- IO ----------------
 class In(BaseModel):
     job_title: str
     excludes: Optional[str] = ""
@@ -352,7 +361,15 @@ class Out(BaseModel):
     role_generic: str
     why: Dict[str, Any]
 
-# ---------- Core ----------
+
+# ---------------- Core ----------------
+def dynamic_role_label(dep: str, text: str) -> str:
+    # Último fallback: usa seniority si lo encuentra; si no, “encargados de …”
+    sen = seniority_label(text)
+    if sen:
+        return f"{sen} de {dep.lower()}"
+    return f"encargados de {dep.lower()}"
+
 def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]:
     original = job_title
     t = norm(job_title)
@@ -383,17 +400,20 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
             continue
 
         if must_ok and senior_ok and not excl_hit:
-            specific = dept_label_from_templates(t, cfg["areas"], cfg["actions"])
-            if specific:
-                return {"input": original, "is_icp": True, "department": dep, "role_generic": specific,
-                        "why": {"must": True, "seniority": True, "exclude": False, "matched": "templates"}}
+            label = label_by_area_and_seniority(dep, t, cfg["areas"], cfg["specials"])
+            if label:
+                return {"input": original, "is_icp": True, "department": dep, "role_generic": label,
+                        "why": {"must": True, "seniority": True, "exclude": False, "matched": "area+seniority/special"}}
+            # Fallback final
             dyn = dynamic_role_label(dep, t)
             return {"input": original, "is_icp": True, "department": dep, "role_generic": dyn,
-                    "why": {"must": True, "seniority": True, "exclude": False, "matched": "dynamic"}}
+                    "why": {"must": True, "seniority": True, "exclude": False, "matched": "fallback"}}
 
+    # Sin match
     return {"input": original, "is_icp": False, "department": "", "role_generic": "", "why": {"no_match": True}}
 
-# ---------- API ----------
+
+# ---------------- API ----------------
 @app.post("/classify", response_model=Out)
 def classify(inp: In):
     external_excludes = to_regex(split_csv(inp.excludes))
@@ -402,5 +422,6 @@ def classify(inp: In):
 @app.get("/health")
 def health():
     return {"ok": True}
+
 
 
