@@ -113,7 +113,7 @@ TECH_AREAS = {
     "tecnología":       r"(?:tecnolog[íi]a|technology|tech|sistemas)",
     "devops":           r"(?:\bdevops\b)",
     "qa":               r"(?:\bqa\b|quality assurance|tester|testing|aseguramiento de calidad|control de calidad|quality control)",
-    "proyectos":        r"(?:project manager|project lead|jefe de proyecto|gestor de proyecto|\bpm\b)",
+    "proyectos":        r"(?:project manager|director de proyectos|proyectos|project|project lead|jefe de proyecto|gestor de proyecto|\bpm\b)",
     "arquitectura":     r"(?:arquitectur[ao]|\barchitecture\b|architect)",
     "seguridad":        r"(?:security|seguridad|infosec|ciberseguridad|cyber ?security)",
     "plataforma":       r"(?:platform|plataforma)",
