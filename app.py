@@ -102,7 +102,7 @@ MKT_HINTS = [
 
 OPS_HINTS = [
     r"\boperaciones\b|\boperations\b|\bops\b",
-
+]
 
 # ---------------- Seniorities genéricos (forman “{seniority} de {área}”) ----------------
 GEN_SENIORITIES: List[Tuple[str, str]] = [
