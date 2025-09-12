@@ -461,9 +461,8 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
                 "why": {"matched": "standalone_department"}
             }
 
-        # --- Router específico para Proyectos (PM / Director de Proyectos) ---
+    # --- Router específico para Proyectos (PM / Director de Proyectos) ---
     if re.search(PM_PATTERN, t, re.I):
-        # Detectamos contexto
         if any_match(t, TECH_HINTS):
             dep = "Tecnologia"
         elif any_match(t, MKT_HINTS):
@@ -471,13 +470,10 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
         elif any_match(t, OPS_HINTS):
             dep = "Operaciones"
         else:
-            # Preferencia por Tecnología cuando no hay contexto claro
             dep = "Tecnologia"
 
-        # Etiqueta por seniority -> "... de proyectos"
         sen = seniority_label(t) or "responsables"
         label = f"{sen} de proyectos"
-
         return {
             "input": original,
             "is_icp": True,
@@ -485,7 +481,7 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
             "role_generic": label,
             "why": {"matched": "pm_router", "department_routed": dep}
         }
-            
+                
     # Tie-break Marketing sobre Ventas
     marketing_signal = bool(re.search(r"\bmarketing\b", t, re.I))
 
