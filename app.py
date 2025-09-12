@@ -33,8 +33,9 @@ def any_match(text: str, patterns: List[str]) -> bool:
 # ---------------- Owners & C-Suite (prioridad máxima) ----------------
 OWNERS = [
     r"\bfounder(s)?\b", r"\bco[- ]?founder(s)?\b",
+    r"\bfundador(a)?s?\b", r"\bco[- ]?fundador(a)?s?\b",
     r"\bowner(s)?\b", r"\bpropietari[oa]s?\b",
-    r"\bpartner(s)?\b|\bsocio(s)?\b",
+    r"\bsoci[oa]s?\b", r"\bpartner(s)?\b",
     r"\bpresident(e|a)?\b", r"\bchair(man|woman)?\b"
 ]
 
@@ -82,6 +83,34 @@ EXCLUDE_COMMON = [
 
 # -------- Router de Proyectos (PM) --------
 PM_PATTERN = r"(?:\bproject (manager|lead|director)\b|\bjefe de proyecto(s)?\b|\bgestor de proyecto(s)?\b|\bpm\b|\bdirect(or|ora) de proyecto(s)?\b)"
+
+# ---- Títulos "sueltos" (sin área/dep) que deben contar como C-Suite
+SOLO_TITLES = [
+    (r"^\s*vp\s*$|^\s*vice ?president(e)?\s*$", "vicepresidentes"),
+    (r"^\s*director(a)?\s*$",                  "directores"),
+    (r"^\s*gerente\s*$",                       "gerentes"),
+    (r"^\s*manager\s*$",                       "managers"),
+]
+
+# ---- Departamentos "solo" (nombres/abreviaturas) -> responsables de {dep}
+DEPT_STANDALONE = [
+    # Marketing
+    (r"^\s*(marketing|mkt)\s*$",                    ("Marketing", "responsables de marketing")),
+    # Tecnología / IT
+    (r"^\s*(it|ti|sistemas|tecnolog[ií]a|technology|tech)\s*$", ("Tecnologia", "responsables de tecnologia")),
+    # Ventas / Comercial
+    (r"^\s*(ventas|sales|comercial(?:es)?)\s*$",    ("Ventas", "responsables de ventas")),
+    # Finanzas / Contabilidad
+    (r"^\s*(finanzas?|finance|financial|contabilidad|accounting)\s*$", ("Finanzas", "responsables de finanzas")),
+    # RR. HH.
+    (r"^\s*(rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos humanos|hr|human resources|people)\s*$",
+     ("RR. HH.", "responsables de recursos humanos")),
+    # Legal
+    (r"^\s*(legal|jur[ií]dico|law|legal affairs)\s*$", ("Legal", "responsables de legal")),
+    # Operaciones
+    (r"^\s*(operaciones|operations|ops|log[ií]stica|logistics|supply ?chain)\s*$",
+     ("Operaciones", "responsables de operaciones")),
+]
 
 TECH_HINTS = [
     r"\b(it|ti)\b", r"\bsistemas\b", r"\btechnology\b|\btech\b",
@@ -409,6 +438,28 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
     for pats, label, dep_fn in C_SUITE_MAP:
         if any(re.search(p, t, re.I) for p in pats):
             return {"input": original, "is_icp": True, "department": dep_fn, "role_generic": label, "why": {"matched": label}}
+            
+    # --- VP / Director / Gerente / Manager "sueltos" -> C-Suite genérico
+    for pat, plural_label in SOLO_TITLES:
+        if re.search(pat, t, re.I):
+            return {
+                "input": original,
+                "is_icp": True,
+                "department": "C-Suite",
+                "role_generic": plural_label,
+                "why": {"matched": "solo_title"}
+            }
+
+    # --- Departamento "solo" (Marketing, RRHH, etc.) -> responsables de {dep}
+    for pat, (dep_name, role_lbl) in DEPT_STANDALONE:
+        if re.search(pat, t, re.I):
+            return {
+                "input": original,
+                "is_icp": True,
+                "department": dep_name,
+                "role_generic": role_lbl,
+                "why": {"matched": "standalone_department"}
+            }
 
         # --- Router específico para Proyectos (PM / Director de Proyectos) ---
     if re.search(PM_PATTERN, t, re.I):
