@@ -42,8 +42,8 @@ OWNERS = [
 # (patrones, label, departamento destino)
 C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bcmo\\b","chief marketing officer"],                         "CMOs",          "Marketing"),
-    (["\\bcio\\b","chief information officer"],                       "CIOs",          "Tecnologia"),
-    (["\\bcto\\b","chief technical","chief technology( officer)?"],   "CTOs",          "Tecnologia"),
+    (["\\bcio\\b","chief information officer","chief information technology officer"], "CIOs",          "Tecnologia"),
+    (["\\bcto\\b","chief technical officer","chief technology officer","chief transformation & technology officer","ctto","chief of technology","chief product and technology officer","technical chief"], "CTOs",          "Tecnologia"),
     (["\\bciso\\b","chief information security officer"],             "CISOs",         "Tecnologia"),
     (["\\bcco\\b","chief commercial officer"],                        "CCOs",          "Ventas"),
     (["\\bcso\\b","chief sales officer"],                             "CSOs (Sales)",  "Ventas"),
@@ -52,6 +52,7 @@ C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bcfo\\b","chief financial officer"],                         "CFOs",          "C-Suite"),
     (["\\bcoo\\b","chief (of )?operations|chief operating( officer)?|operations officer"], "COOs","C-Suite"),
     (["\\bcao\\b","chief administrat(ive|ion) officer"],              "CAOs",          "C-Suite"),
+    (["\\bcqa\\b","cqa"],                                             "CQAs",          "Tecnologia"),
 ]
 
 
@@ -60,7 +61,7 @@ C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
 SENIORITY_COMMON = [
     r"\bvp\b|\bvice ?president(e)?\b",
     r"\bhead\b|\bdirect(or|ora)\b|\bdireccion\b|\bdirecci[oó]n\b",
-    r"\bmanager\b|\bgerente\b|\bjef[ea]\b|\bresponsable\b|\blead\b|\bprincipal\b",
+    r"\bmanager\b|\bgerente\b|\bjef[ea]\b|\bresponsable\b|\blead\b|\bprincipal\b|\bleader\b",
     r"\bcoordinador(a)?\b|\bcoordinator\b",
     r"\bstrategist\b|\bestratega\b",
     r"\bejecutiv[oa]s?\b|\bexecutive\b",
@@ -137,7 +138,7 @@ OPS_HINTS = [
 GEN_SENIORITIES: List[Tuple[str, str]] = [
     (r"(?:\bhead\b|\bdirect(or|ora)\b|VP|vice ?president(e)?)", "directores"),
     (r"(?:\bmanager\b|\bgerente\b)",                            "gerentes"),
-    (r"(?:\bjef[ea]\b|\bprincipal\b|\blead\b)",                 "jefes"),
+    (r"(?:\bjef[ea]\b|\bprincipal\b|\blead\b|\bleader\b)", "jefes"),
     (r"(?:\bcoordinador(a)?\b|\bcoordinator\b)",                "coordinadores"),
     (r"\bresponsable\b",                                        "responsables"),
     (r"(?:\bcontroller\b|\bcontrolador\b)",                     "responsables de control de gestión"),
@@ -162,10 +163,10 @@ TECH_AREAS = {
     "implementaciones": r"(?:implementation|implementaci[oó]n|deployment|despliegue)",
     "ingeniería":       r"(?:ingenier[íi]a|engineer(?:ing)?)",
     "it":               r"(?:\bti\b|\bit\b|informaci[oó]n|information)",
-    "tecnología":       r"(?:tecnolog[íi]a|technology|tech|sistemas)",
+    "tecnología":       r"(?:tecnolog[íi]a|technology|tech|technical|tecnico)",
     "devops":           r"(?:\bdevops\b)",
     "qa":               r"(?:\bqa\b|quality assurance|tester|testing|aseguramiento de calidad|control de calidad|quality control)",
-    "proyectos":        r"(?:project manager|director de proyectos|proyectos|project|project lead|jefe de proyecto|gestor de proyecto|\bpm\b)",
+    "proyectos":        r"(?:project|proyectos|jefe de proyecto|gestor de proyecto|\bpm\b)",
     "arquitectura":     r"(?:arquitectur[ao]|\barchitecture\b|architect)",
     "seguridad":        r"(?:security|seguridad|infosec|ciberseguridad|cyber ?security)",
     "plataforma":       r"(?:platform|plataforma)",
@@ -352,6 +353,10 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
             r"\bsoftware\b|\bplatform\b", r"\barquitectur[ao]?\b|\barchitecture\b",
             r"\binfraestructura\b|\binfrastructure\b",
             r"\bsecurity\b|\bseguridad\b",
+            r"\btechnical\b|\btecnico\b", r"\bengineering\b|\bingenier[íi]a\b|\bengineer\b",
+            r"\bproject\b|\bproyecto\b", r"\bqa\b|\bquality\b",
+            r"\bde tecnolog[íi]a\b", r"\borganizaci[oó]n\b", r"\bde la informaci[oó]n\b",
+            r"\bde proyectos\b|\bÁrea\b|\barea\b",
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\bdesarrollo ?de ?negocio\b|\bbusiness ?development\b"],
