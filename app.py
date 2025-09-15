@@ -71,59 +71,62 @@ HIERARCHY_LEVELS = {
 
 # ---------------- Subdivisiones por Departamento ----------------
 TECH_SUBDIVISIONS = {
-    "Data": [r"\bdata\b", r"\banalytics\b", r"\bbi\b", r"\bmachine\s+learning\b", r"\bml\b", r"\bai\b"],
-    "Engineering": [r"\bengineer\b", r"\bdev\b", r"\bdevelop\b", r"\bsoftware\b", r"\bfullstack\b", r"\bbackend\b", r"\bfrontend\b"],
-    "Technical": [r"\btechnical\s+support\b", r"\bit\s+support\b", r"\bsupport\b", r"\btechnical\s+service\b", r"\bsystem\b"],
-    "Product": [r"\bproduct\b", r"\bux\b", r"\bui\b", r"\bdesign\b"],
-    "Infrastructure": [r"\binfra\b", r"\bcloud\b", r"\bdevops\b", r"\bsecurity\b", r"\bcyber\b"],
+    "Datos": [r"\bdata\b", r"\banalytics\b", r"\bbi\b", r"\bbusiness intelligence\b"],
+    "Ingeniería": [r"\bengineer\b", r"\bingeniería\b", r"\bdevelop\b", r"\bsoftware\b"],
+    "Técnico": [r"\btechnical\b", r"\btécnico\b", r"\btech\b"],
+    "Producto": [r"\bproduct\b", r"\bproducto\b", r"\bpm\b"],
+    "Infraestructura": [r"\binfrastructure\b", r"\bcloud\b", r"\bdevops\b", r"\bsystem\b"],
     "General": []  # fallback
 }
 
 MARKETING_SUBDIVISIONS = {
-    "Digital": [r"\bdigital\b", r"\bonline\b", r"\bseo\b", r"\bsem\b", r"\bsocial\b"],
-    "Traditional": [r"\btraditional\b", r"\bprint\b", r"\btv\b", r"\bradio\b"],
-    "Content": [r"\bcontent\b", r"\bcopy\b", r"\bbrand\b", r"\bcommunication\b"],
-    "Growth": [r"\bgrowth\b", r"\bacquisition\b", r"\bperformance\b"],
+    "Digital": [r"\bdigital\b", r"\bonline\b", r"\bppc\b", r"\bsem\b", r"\bseo\b"],
+    "Tradicional": [r"\btraditional\b", r"\bprint\b", r"\btv\b", r"\bradio\b"],
+    "Contenido": [r"\bcontent\b", r"\bcontenido\b", r"\bbrand\b", r"\bcopy\b"],
+    "Crecimiento": [r"\bgrowth\b", r"\bcrecimiento\b", r"\bacquisition\b"],
+    "Rendimiento": [r"\bperformance\b", r"\bmetrics\b", r"\banalytics\b"],
+    "Social": [r"\bsocial\b", r"\bcommunity\b", r"\binfluencer\b"],
     "General": []  # fallback
 }
 
 SALES_SUBDIVISIONS = {
-    "Enterprise": [r"\benterprise\b", r"\bcorporate\b", r"\bb2b\b"],
-    "Retail": [r"\bretail\b", r"\bb2c\b", r"\bconsumer\b"],
-    "Channel": [r"\bchannel\b", r"\bpartner\b", r"\bindirect\b"],
-    "Inside": [r"\binside\b", r"\binbound\b", r"\btelesales\b"],
+    "Ventas Internas": [r"\binside\b", r"\binbound\b", r"\binternal\b"],
+    "Ventas de Campo": [r"\bfield\b", r"\boutside\b", r"\bexternal\b"],
+    "Canal": [r"\bchannel\b", r"\bpartner\b", r"\bindirect\b"],
+    "Cuentas Clave": [r"\bkey account\b", r"\benterprise\b", r"\bstrategic\b"],
     "General": []  # fallback
 }
 
 FINANCE_SUBDIVISIONS = {
-    "FP&A": [r"\bfp&a\b", r"\bplanning\b", r"\bbudget\b", r"\bforecasting\b"],
-    "Accounting": [r"\baccounting\b", r"\bcontabilidad\b", r"\bcontador\b"],
-    "Treasury": [r"\btreasury\b", r"\btesorería\b", r"\bcash\b"],
-    "Tax": [r"\btax\b", r"\bfiscal\b", r"\btribute\b"],
+    "Contabilidad": [r"\baccounting\b", r"\bcontabilidad\b", r"\baccountant\b"],
+    "Tesorería": [r"\btreasury\b", r"\btesorería\b", r"\bcash\b"],
+    "Control": [r"\bcontrol\b", r"\bcontroller\b", r"\baudit\b"],
+    "FP&A": [r"\bfp&a\b", r"\bplanning\b", r"\banalysis\b", r"\bbudget\b"],
+    "Crédito": [r"\bcredit\b", r"\brisk\b", r"\bcollections\b"],
     "General": []  # fallback
 }
 
 OPERATIONS_SUBDIVISIONS = {
-    "Supply Chain": [r"\bsupply\b", r"\bprocurement\b", r"\bsourcing\b"],
-    "Logistics": [r"\blogistics\b", r"\bwarehouse\b", r"\bshipping\b"],
-    "Manufacturing": [r"\bmanufacturing\b", r"\bproduction\b", r"\bfactory\b"],
-    "Quality": [r"\bquality\b", r"\bqa\b", r"\biso\b"],
+    "Logística": [r"\blogistics\b", r"\bwarehouse\b", r"\bshipping\b"],
+    "Cadena de Suministro": [r"\bsupply chain\b", r"\bprocurement\b", r"\bsourcing\b"],
+    "Calidad": [r"\bquality\b", r"\bqi\b", r"\bqc\b"],
+    "Servicio al Cliente": [r"\bcustomer service\b", r"\bsupport\b", r"\bservice\b"],
     "General": []  # fallback
 }
 
 HR_SUBDIVISIONS = {
-    "Talent": [r"\btalent\b", r"\brecruit\b", r"\bacquisition\b"],
-    "Compensation": [r"\bcompensation\b", r"\bbenefits\b", r"\bpayroll\b"],
-    "Learning": [r"\blearning\b", r"\btraining\b", r"\bl&d\b"],
+    "Talento": [r"\btalent\b", r"\brecruit\b", r"\bacquisition\b"],
+    "Compensación": [r"\bcompensation\b", r"\bbenefits\b", r"\bpayroll\b"],
+    "Aprendizaje": [r"\blearning\b", r"\btraining\b", r"\bl&d\b"],
     "Business Partner": [r"\bbusiness\s+partner\b", r"\bhrbp\b"],
     "General": []  # fallback
 }
 
 PRODUCT_SUBDIVISIONS = {
-    "Management": [r"\bmanagement\b", r"\bmanager\b", r"\bowner\b"],
-    "Design": [r"\bdesign\b", r"\bux\b", r"\bui\b", r"\buser\s+experience\b"],
-    "Strategy": [r"\bstrategy\b", r"\bstrateg\b", r"\bportfolio\b"],
-    "Research": [r"\bresearch\b", r"\banalyst\b", r"\binsights\b"],
+    "Gestión": [r"\bmanagement\b", r"\bmanager\b", r"\bowner\b"],
+    "Diseño": [r"\bdesign\b", r"\bux\b", r"\bui\b", r"\buser\s+experience\b"],
+    "Estrategia": [r"\bstrategy\b", r"\bstrateg\b", r"\bportfolio\b"],
+    "Investigación": [r"\bresearch\b", r"\banalyst\b", r"\binsights\b"],
     "General": []  # fallback
 }
 
@@ -270,6 +273,7 @@ TECH_AREAS = {
     "plataforma":       r"(?:platform|plataforma)",
     "nube":             r"(?:cloud|nube|aws|azure|gcp|google cloud)",
     "datos":            r"(?:data|datos|bi|business intelligence|analitica)",
+    "soporte":          r"(?:support|soporte|help ?desk|service ?desk|technical ?support)",
 }
 
 MKT_AREAS = {
@@ -366,6 +370,14 @@ SPECIAL_TECH: List[Tuple[str, str]] = [
     (TECH_AREAS["qa"],        "líderes de qa"),
     (TECH_AREAS["proyectos"], "project managers"),
     (r"\bdevops\b",           "devops"),
+    # Reglas especiales para roles técnicos
+    (r"(?:technical\s+support|tech\s+support)", "gerentes técnicos de soporte"),
+    (r"(?:technical\s+manager|tech\s+manager)", "gerentes técnicos"),
+    (r"(?:technical\s+director|tech\s+director)", "directores técnicos"),
+    (r"(?:technical\s+lead|tech\s+lead)", "líderes técnicos"),
+    (r"(?:technical\s+analyst|tech\s+analyst)", "analistas técnicos"),
+    (r"(?:support\s+manager)", "gerentes de soporte"),
+    (r"(?:customer\s+support|help\s+desk)", "responsables de soporte al cliente"),
 ]
 
 # Marketing: atajos comunes
@@ -521,6 +533,8 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
             r"\bdata\b|\banalytics\b|\bscience\b",  # Agregado para Data Scientist
             r"\bdatabase\b|\bdb\b",  # Agregado para Database Administrator
             r"\bsystem\b|\bnetwork\b",  # Agregado para System/Network Administrator
+            r"\bsupport\b|\bsoporte\b",  # Agregado para Support roles
+            r"\bhelp ?desk\b|\bservice ?desk\b",  # Agregado para Help Desk roles
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\bdesarrollo ?de ?negocio\b|\bbusiness ?development\b"],
