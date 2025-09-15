@@ -35,9 +35,97 @@ OWNERS = [
     r"\bfounder(s)?\b", r"\bco[- ]?founder(s)?\b",
     r"\bfundador(a)?s?\b", r"\bco[- ]?fundador(a)?s?\b",
     r"\bowner(s)?\b", r"\bpropietari[oa]s?\b",
+    r"\bdue[nñ][oa]s?\b",
     r"\bsoci[oa]s?\b", r"\bpartner(s)?\b",
     r"\bpresident(e|a)?\b", r"\bchair(man|woman)?\b"
 ]
+
+GENERAL_MANAGEMENT = [
+    r"\bdirector\s+general\b", r"\bgeneral\s+manager\b",
+    r"\bgerente\s+general\b", r"\bmanaging\s+director\b"
+]
+
+# ---------------- Hierarchy Levels ----------------
+HIERARCHY_LEVELS = {
+    "C-Suite": [
+        r"\bceo\b", r"\bcfo\b", r"\bcto\b", r"\bcmo\b", r"\bcio\b", r"\bcoo\b", 
+        r"\bchro\b", r"\bcdo\b", r"\bciso\b", r"\bcco\b", r"\bcso\b", r"\bcro\b", 
+        r"\bcao\b", r"\bcqa\b", r"\bchief\b"
+    ],
+    "VP/Director": [
+        r"\bvp\b", r"\bvice\s*president\b", r"\bdirect(or|ora)\b", r"\bhead\s+of\b",
+        r"\bdeputy\b", r"\bsubdirect(or|ora)\b"
+    ],
+    "Manager": [
+        r"\bmanager\b", r"\bgerente\b"
+    ],
+    "Lead": [
+        r"\bjef[ea]\b", r"\blead\b", r"\bleader\b", r"\bprincipal\b",
+        r"\bcoordinador(a)?\b", r"\bcoordinator\b", r"\bresponsable\b"
+    ],
+    "Specialist": [
+        r"\bspecialist\b", r"\bespecialista\b", r"\bengineer\b", r"\bingeniero\b",
+        r"\banalyst\b", r"\banalista\b", r"\bexecutive\b", r"\bejecutiv[oa]\b"
+    ]
+}
+
+# ---------------- Subdivisiones por Departamento ----------------
+TECH_SUBDIVISIONS = {
+    "Data": [r"\bdata\b", r"\banalytics\b", r"\bbi\b", r"\bmachine\s+learning\b", r"\bml\b", r"\bai\b"],
+    "Engineering": [r"\bengineer\b", r"\bdev\b", r"\bdevelop\b", r"\bsoftware\b", r"\bfullstack\b", r"\bbackend\b", r"\bfrontend\b"],
+    "Technical": [r"\btechnical\s+support\b", r"\bit\s+support\b", r"\bsupport\b", r"\btechnical\s+service\b", r"\bsystem\b"],
+    "Product": [r"\bproduct\b", r"\bux\b", r"\bui\b", r"\bdesign\b"],
+    "Infrastructure": [r"\binfra\b", r"\bcloud\b", r"\bdevops\b", r"\bsecurity\b", r"\bcyber\b"],
+    "General": []  # fallback
+}
+
+MARKETING_SUBDIVISIONS = {
+    "Digital": [r"\bdigital\b", r"\bonline\b", r"\bseo\b", r"\bsem\b", r"\bsocial\b"],
+    "Traditional": [r"\btraditional\b", r"\bprint\b", r"\btv\b", r"\bradio\b"],
+    "Content": [r"\bcontent\b", r"\bcopy\b", r"\bbrand\b", r"\bcommunication\b"],
+    "Growth": [r"\bgrowth\b", r"\bacquisition\b", r"\bperformance\b"],
+    "General": []  # fallback
+}
+
+SALES_SUBDIVISIONS = {
+    "Enterprise": [r"\benterprise\b", r"\bcorporate\b", r"\bb2b\b"],
+    "Retail": [r"\bretail\b", r"\bb2c\b", r"\bconsumer\b"],
+    "Channel": [r"\bchannel\b", r"\bpartner\b", r"\bindirect\b"],
+    "Inside": [r"\binside\b", r"\binbound\b", r"\btelesales\b"],
+    "General": []  # fallback
+}
+
+FINANCE_SUBDIVISIONS = {
+    "FP&A": [r"\bfp&a\b", r"\bplanning\b", r"\bbudget\b", r"\bforecasting\b"],
+    "Accounting": [r"\baccounting\b", r"\bcontabilidad\b", r"\bcontador\b"],
+    "Treasury": [r"\btreasury\b", r"\btesorería\b", r"\bcash\b"],
+    "Tax": [r"\btax\b", r"\bfiscal\b", r"\btribute\b"],
+    "General": []  # fallback
+}
+
+OPERATIONS_SUBDIVISIONS = {
+    "Supply Chain": [r"\bsupply\b", r"\bprocurement\b", r"\bsourcing\b"],
+    "Logistics": [r"\blogistics\b", r"\bwarehouse\b", r"\bshipping\b"],
+    "Manufacturing": [r"\bmanufacturing\b", r"\bproduction\b", r"\bfactory\b"],
+    "Quality": [r"\bquality\b", r"\bqa\b", r"\biso\b"],
+    "General": []  # fallback
+}
+
+HR_SUBDIVISIONS = {
+    "Talent": [r"\btalent\b", r"\brecruit\b", r"\bacquisition\b"],
+    "Compensation": [r"\bcompensation\b", r"\bbenefits\b", r"\bpayroll\b"],
+    "Learning": [r"\blearning\b", r"\btraining\b", r"\bl&d\b"],
+    "Business Partner": [r"\bbusiness\s+partner\b", r"\bhrbp\b"],
+    "General": []  # fallback
+}
+
+PRODUCT_SUBDIVISIONS = {
+    "Management": [r"\bmanagement\b", r"\bmanager\b", r"\bowner\b"],
+    "Design": [r"\bdesign\b", r"\bux\b", r"\bui\b", r"\buser\s+experience\b"],
+    "Strategy": [r"\bstrategy\b", r"\bstrateg\b", r"\bportfolio\b"],
+    "Research": [r"\bresearch\b", r"\banalyst\b", r"\binsights\b"],
+    "General": []  # fallback
+}
 
 # (patrones, label, departamento destino)
 C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
@@ -48,10 +136,12 @@ C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bcco\\b","chief commercial officer"],                        "CCOs",          "Ventas"),
     (["\\bcso\\b","chief sales officer"],                             "CSOs (Sales)",  "Ventas"),
     (["\\bcro\\b","chief revenue officer"],                           "CROs",          "Ventas"),
-    (["\\bceo\\b","chief executive officer"],                         "CEOs",          "C-Suite"),
-    (["\\bcfo\\b","chief financial officer"],                         "CFOs",          "C-Suite"),
-    (["\\bcoo\\b","chief (of )?operations|chief operating( officer)?|operations officer"], "COOs","C-Suite"),
-    (["\\bcao\\b","chief administrat(ive|ion) officer"],              "CAOs",          "C-Suite"),
+    (["\\bceo\\b","chief executive officer"],                         "CEOs",          "Ejecutivo"),
+    (["\\bcfo\\b","chief financial officer"],                         "CFOs",          "Ejecutivo"),
+    (["\\bcdo\\b","chief data officer","chief digital officer"],      "CDOs",          "Ejecutivo"),
+    (["\\bchro\\b","chief human resources officer"],                  "CHROs",         "RR. HH."),
+    (["\\bcoo\\b","chief (of )?operations|chief operating( officer)?|operations officer"], "COOs","Ejecutivo"),
+    (["\\bcao\\b","chief administrat(ive|ion) officer"],              "CAOs",          "Ejecutivo"),
     (["\\bcqa\\b","cqa"],                                             "CQAs",          "Tecnologia"),
 ]
 
@@ -66,19 +156,27 @@ SENIORITY_COMMON = [
     r"\bstrategist\b|\bestratega\b",
     r"\bejecutiv[oa]s?\b|\bexecutive\b",
     r"\bgestor(es)?\b",
-    r"\badministrador(a)?\b",
+    r"\badministrador(a)?\b|\badministrator\b",
     r"\bcontroller\b|\bcontrolador\b",
     r"\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b",
     r"\bdepartment\b|\bdepartamento\b|\bdpto\b",
+    # Agregamos roles técnicos y de análisis
+    r"\bengineer\b|\bingeniero\b",
+    r"\banalyst\b|\banalista\b",
+    r"\bscientist\b|\bcient[íi]fico\b",
+    r"\bspecialist\b|\bespecialista\b",
+    r"\brepresentative\b|\brepresentante\b",
+    r"\bconsultant\b|\bconsultor(a)?\b",
+    r"\bplanner\b|\bplanificador(a)?\b",  # Agregado para Financial Planner
+    r"\brecruiter\b|\breclutador(a)?\b",  # Agregado para Recruiter
 ]
 
 EXCLUDE_COMMON = [
     r"\bjunior\b|\bjr\b", r"\btrainee\b|\bbecari[oa]\b|\bintern\b",
     r"\bassistant\b|\basistente\b",
-    r"\bspecialist\b|\bespecialista\b|\bconsultant\b",
     r"\bcommunity\b|\bartist\b|\bart\b",
     r"\bdesign\b|\bdise[nñ]o\b|\badvisor\b",
-    r"\banalytics?\b|\banalista\b|\bdata\b",
+    # Removido: analytics, analista, data - ahora son roles válidos
     r"\bpaid\b|\bcustomer\b",
 ]
 
@@ -249,6 +347,15 @@ OPS_AREAS = {
     "h&s":                r"(?:seguridad e higiene|hse|ehs|health & safety|seguridad industrial)",
 }
 
+PRODUCT_AREAS = {
+    "gestión de producto": r"(?:product management|gestión de producto|product owner|po\b)",
+    "desarrollo":         r"(?:product development|desarrollo de producto)",
+    "estrategia":         r"(?:product strategy|estrategia de producto)",
+    "portfolio":          r"(?:portfolio|portafolio)",
+    "design":             r"(?:product design|diseño de producto|ux|ui|user experience|user interface)",
+    "research":           r"(?:user research|investigación|market research)",
+}
+
 
 # ---------------- Reglas especiales (labels fijos por depto) ----------------
 # Tecnología: sysadmin/netadmin/QA/PM/DevOps, etc.
@@ -275,6 +382,7 @@ SPECIAL_SALES: List[Tuple[str, str]] = [
 
 # Finanzas: roles “bonitos”
 SPECIAL_FIN: List[Tuple[str, str]] = [
+    (r"(?:director\s+financiero|financial\s+director)", "directores financieros"),
     (FIN_AREAS["control de gestión"], "responsables de control de gestión"),
     (r"(?:\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b)", "responsables contables"),
     (FIN_AREAS["tesorería"],  "responsables de tesorería"),
@@ -286,6 +394,7 @@ SPECIAL_FIN: List[Tuple[str, str]] = [
 
 # RRHH
 SPECIAL_HR: List[Tuple[str, str]] = [
+    (r"(?:director\s+de\s+rr\.?\s*hh\.?|director\s+de\s+recursos\s+humanos)", "directores de rrhh"),
     (r"(?:recruit(ing|er)?|selecci[oó]n|acquisition|acquisitions?)", "reclutadores"),
     (r"(?:hrbp|people partner|business partner)",                   "business partners de rr. hh."),
     (r"(?:payroll|n[oó]mina)",                                      "responsables de nómina"),
@@ -311,6 +420,15 @@ SPECIAL_OPS: List[Tuple[str, str]] = [
     (r"(?:health & safety|seguridad e higiene|hse|ehs|seguridad industrial)", "responsables de seguridad e higiene"),
 ]
 
+# Producto
+SPECIAL_PRODUCT: List[Tuple[str, str]] = [
+    (r"(?:product manager|pm\b|gestor de producto)",                "product managers"),
+    (r"(?:product owner|po\b|propietario de producto)",             "product owners"),
+    (r"(?:product director|director de producto)",                  "directores de producto"),
+    (r"(?:ux|ui|user experience|user interface|diseño de producto)", "responsables de diseño de producto"),
+    (r"(?:user research|investigación de usuario)",                 "investigadores de usuario"),
+]
+
 
 # ---------------- Motor: “especiales” -> “{seniority} de {área}” ----------------
 def detect_first(text: str, pairs: List[Tuple[str, str]]) -> Optional[str]:
@@ -324,6 +442,43 @@ def detect_area(text: str, areas: Dict[str, str]) -> Optional[str]:
         if re.search(pat, text, re.I):
             return area
     return None
+
+def detect_hierarchy_level(text: str) -> str:
+    """Detecta el nivel de jerarquía del título"""
+    text_norm = norm(text)
+    
+    for level, patterns in HIERARCHY_LEVELS.items():
+        if any(re.search(pat, text_norm, re.I) for pat in patterns):
+            return level
+    
+    return "Specialist"  # fallback
+
+def detect_subdivision(text: str, department: str) -> str:
+    """Detecta la subdivisión según el departamento"""
+    text_norm = norm(text)
+    
+    subdivision_map = {
+        "Tecnologia": TECH_SUBDIVISIONS,
+        "Marketing": MARKETING_SUBDIVISIONS,
+        "Ventas": SALES_SUBDIVISIONS,
+        "Finanzas": FINANCE_SUBDIVISIONS,
+        "Operaciones": OPERATIONS_SUBDIVISIONS,
+        "RR. HH.": HR_SUBDIVISIONS,
+        "Producto": PRODUCT_SUBDIVISIONS,
+    }
+    
+    if department not in subdivision_map:
+        return "General"
+    
+    subdivisions = subdivision_map[department]
+    
+    for subdivision, patterns in subdivisions.items():
+        if subdivision == "General":
+            continue
+        if any(re.search(pat, text_norm, re.I) for pat in patterns):
+            return subdivision
+    
+    return "General"  # fallback
 
 def label_by_area_and_seniority(dep: str, text: str, areas: Dict[str, str], specials: List[Tuple[str, str]]) -> Optional[str]:
     # 1) Reglas especiales
@@ -341,7 +496,13 @@ def label_by_area_and_seniority(dep: str, text: str, areas: Dict[str, str], spec
 # ---------------- Dept config (orden importa; tie-break Marketing > Ventas) ----------------
 DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
     ("Marketing", {
-        "must": [r"\bmarketing\b"],
+        "must": [
+            r"\bmarketing\b", r"\bbrand\b", r"\bmarket\b",
+            r"\bcontent\b|\bcontenido\b",  # Agregado para Content Manager
+            r"\bgrowth\b|\bcrecimiento\b",  # Agregado para Growth Manager
+            r"\bcampaign\b|\bcampaña\b",  # Agregado para Campaign Manager
+            r"\bsocial\b|\bmedia\b",  # Agregado para Social Media Manager
+        ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\btrade\b", r"\bperformance\b", r"\bproduct\b", r"\bads\b", r"\barea\b", r"\baccount\b"],
         "areas": MKT_AREAS, "specials": SPECIAL_MKT,
@@ -357,6 +518,9 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
             r"\bproject\b|\bproyecto\b", r"\bqa\b|\bquality\b",
             r"\bde tecnolog[íi]a\b", r"\borganizaci[oó]n\b", r"\bde la informaci[oó]n\b",
             r"\bde proyectos\b|\bÁrea\b|\barea\b",
+            r"\bdata\b|\banalytics\b|\bscience\b",  # Agregado para Data Scientist
+            r"\bdatabase\b|\bdb\b",  # Agregado para Database Administrator
+            r"\bsystem\b|\bnetwork\b",  # Agregado para System/Network Administrator
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON + [r"\bdesarrollo ?de ?negocio\b|\bbusiness ?development\b"],
@@ -376,9 +540,14 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
     }),
     ("Finanzas", {
         "must": [
-            r"\bfinance\b|\bfinancial\b|\bfinanzas?\b|\bfinanciera\b",
+            r"\bfinance\b|\bfinancial\b|\bfinanzas?\b|\bfinanciera\b|\bfinanciero\b",
             r"\baccounting\b|\bcontabilidad\b|\baccount\b",
-            r"\bcontador(a)?\b|\bcontable(s)?\b|investment",
+            r"\bcontador(a)?\b|\bcontable(s)?\b|\binvestment\b",
+            r"\baccountant\b",  # Agregado específicamente para Accountant
+            r"\bcontroller\b|\bcontrolador\b",  # Agregado para Controller
+            r"\bplanner\b|\bplanning\b",  # Agregado para Financial Planner
+            r"\btreasury\b|\btesorería\b",  # Agregado para Treasury Manager
+            r"\bcredit\b|\bcrédito\b",  # Agregado para Credit Analyst
         ],
         "seniority": SENIORITY_COMMON + [r"\bfiscal\b", r"\bcontroller\b|\bcontrolador\b",
                                          r"\badministraci[oó]n\b|\badministrador(a)?\b|\badministrativ[oa]s?\b"],
@@ -386,7 +555,13 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "areas": FIN_AREAS, "specials": SPECIAL_FIN,
     }),
     ("RR. HH.", {
-        "must": [r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|talent)"],
+        "must": [
+            r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|talent|\brrhh\b|\brr\.?\s*hh\.?)",
+            r"\brecruit(er|ing)?\b|\breclutamiento\b",  # Agregado para Recruiter
+            r"\bcompensation\b|\bcompensaciones\b",  # Agregado para Compensation Manager
+            r"\btraining\b|\bcapacitaci[oó]n\b",  # Agregado para Training Manager
+            r"\bpayroll\b|\bn[oó]mina\b",  # Agregado para Payroll Manager
+        ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
         "areas": HR_AREAS, "specials": SPECIAL_HR,
@@ -403,6 +578,12 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "exclude": EXCLUDE_COMMON,
         "areas": OPS_AREAS, "specials": SPECIAL_OPS,
     }),
+    ("Producto", {
+        "must": [r"(?:product|producto|product management|gestión de producto)"],
+        "seniority": SENIORITY_COMMON,
+        "exclude": EXCLUDE_COMMON,
+        "areas": PRODUCT_AREAS, "specials": SPECIAL_PRODUCT,
+    }),
 ]
 
 
@@ -415,6 +596,8 @@ class Out(BaseModel):
     input: str
     is_icp: bool
     department: str
+    subdivision: str
+    hierarchy_level: str
     role_generic: str
     why: Dict[str, Any]
 
@@ -433,24 +616,38 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
     # Excludes externos
     if any_match(t, external_excludes):
-        return {"input": original, "is_icp": False, "department": "", "role_generic": "", "why": {"excluded_by": "external_excludes"}}
+        return {"input": original, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"excluded_by": "external_excludes"}}
 
     # Owners
     if any_match(t, OWNERS):
-        return {"input": original, "is_icp": True, "department": "C-Suite", "role_generic": "propietarios", "why": {"matched": "owners"}}
+        hierarchy_level = detect_hierarchy_level(original)
+        subdivision = detect_subdivision(original, "Ejecutivo")
+        return {"input": original, "is_icp": True, "department": "Ejecutivo", "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": "propietarios", "why": {"matched": "owners"}}
+
+    # General Management
+    if any_match(t, GENERAL_MANAGEMENT):
+        hierarchy_level = detect_hierarchy_level(original)
+        subdivision = detect_subdivision(original, "Ejecutivo")
+        return {"input": original, "is_icp": True, "department": "Ejecutivo", "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": "directores", "why": {"matched": "general_management"}}
 
     # C-Suite
     for pats, label, dep_fn in C_SUITE_MAP:
         if any(re.search(p, t, re.I) for p in pats):
-            return {"input": original, "is_icp": True, "department": dep_fn, "role_generic": label, "why": {"matched": label}}
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, dep_fn)
+            return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": label}}
             
-    # --- VP / Director / Gerente / Manager "sueltos" -> C-Suite genérico
+    # --- VP / Director / Gerente / Manager "sueltos" -> Ejecutivo genérico
     for pat, plural_label in SOLO_TITLES:
         if re.search(pat, t, re.I):
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, "Ejecutivo")
             return {
                 "input": original,
                 "is_icp": True,
-                "department": "C-Suite",
+                "department": "Ejecutivo",
+                "subdivision": subdivision,
+                "hierarchy_level": hierarchy_level,
                 "role_generic": plural_label,
                 "why": {"matched": "solo_title"}
             }
@@ -458,10 +655,14 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
     # --- Departamento "solo" (Marketing, RRHH, etc.) -> responsables de {dep}
     for pat, (dep_name, role_lbl) in DEPT_STANDALONE:
         if re.search(pat, t, re.I):
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, dep_name)
             return {
                 "input": original,
                 "is_icp": True,
                 "department": dep_name,
+                "subdivision": subdivision,
+                "hierarchy_level": hierarchy_level,
                 "role_generic": role_lbl,
                 "why": {"matched": "standalone_department"}
             }
@@ -479,10 +680,14 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
         sen = seniority_label(t) or "responsables"
         label = f"{sen} de proyectos"
+        hierarchy_level = detect_hierarchy_level(original)
+        subdivision = detect_subdivision(original, dep)
         return {
             "input": original,
             "is_icp": True,
             "department": dep,
+            "subdivision": subdivision,
+            "hierarchy_level": hierarchy_level,
             "role_generic": label,
             "why": {"matched": "pm_router", "department_routed": dep}
         }
@@ -501,16 +706,18 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
         if must_ok and senior_ok and not excl_hit:
             label = label_by_area_and_seniority(dep, t, cfg["areas"], cfg["specials"])
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, dep)
             if label:
-                return {"input": original, "is_icp": True, "department": dep, "role_generic": label,
+                return {"input": original, "is_icp": True, "department": dep, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label,
                         "why": {"must": True, "seniority": True, "exclude": False, "matched": "area+seniority/special"}}
             # Fallback final
             dyn = dynamic_role_label(dep, t)
-            return {"input": original, "is_icp": True, "department": dep, "role_generic": dyn,
+            return {"input": original, "is_icp": True, "department": dep, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": dyn,
                     "why": {"must": True, "seniority": True, "exclude": False, "matched": "fallback"}}
 
     # Sin match
-    return {"input": original, "is_icp": False, "department": "", "role_generic": "", "why": {"no_match": True}}
+    return {"input": original, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"no_match": True}}
 
 
 # ---------------- API ----------------
