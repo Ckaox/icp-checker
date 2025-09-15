@@ -371,8 +371,7 @@ SPECIAL_TECH: List[Tuple[str, str]] = [
     (TECH_AREAS["proyectos"], "project managers"),
     (r"\bdevops\b",           "devops"),
     # Reglas especiales para roles técnicos
-    (r"(?:technical\s+support|tech\s+support)", "gerentes técnicos de soporte"),
-    (r"(?:technical\s+manager|tech\s+manager)", "gerentes técnicos"),
+    (r"(?:technical\s+(?:support|service|manager)|tech\s+(?:support|service|manager))", "gerentes técnicos"),
     (r"(?:technical\s+director|tech\s+director)", "directores técnicos"),
     (r"(?:technical\s+lead|tech\s+lead)", "líderes técnicos"),
     (r"(?:technical\s+analyst|tech\s+analyst)", "analistas técnicos"),
@@ -632,8 +631,16 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
     if any_match(t, external_excludes):
         return {"input": original, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"excluded_by": "external_excludes"}}
 
-    # Owners
+    # Owners (pero damos prioridad a C-Suite específicos)
     if any_match(t, OWNERS):
+        # Si tiene términos específicos de C-Suite, damos prioridad a esos
+        for pats, label, dep_fn in C_SUITE_MAP:
+            if any(re.search(p, t, re.I) for p in pats):
+                hierarchy_level = detect_hierarchy_level(original)
+                subdivision = detect_subdivision(original, dep_fn)
+                return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": f"{label}_over_owner"}}
+        
+        # Si no hay C-Suite específico, entonces es propietario
         hierarchy_level = detect_hierarchy_level(original)
         subdivision = detect_subdivision(original, "Ejecutivo")
         return {"input": original, "is_icp": True, "department": "Ejecutivo", "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": "propietarios", "why": {"matched": "owners"}}
