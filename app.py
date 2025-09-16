@@ -1,10 +1,14 @@
 # app.py
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel
 import re, unicodedata
 from typing import List, Dict, Any, Tuple, Optional
 
 app = FastAPI(title="ICP + Dept + Role (areas+seniority engine)")
+
+# Add gzip compression for faster responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ---------------- Utils ----------------
 def norm(s: str) -> str:
@@ -26,11 +30,69 @@ def to_regex(items: List[str]) -> List[str]:
             out.append(r"\b" + re.escape(it) + r"\b")
     return out
 
+# Compiled regex cache for performance
+_compiled_regex_cache: Dict[str, re.Pattern] = {}
+
+# Result cache for frequently requested roles
+_result_cache: Dict[str, Dict[str, Any]] = {}
+_cache_max_size = 1000
+
+def get_compiled_regex(pattern: str) -> re.Pattern:
+    """Get compiled regex with caching for performance"""
+    if pattern not in _compiled_regex_cache:
+        _compiled_regex_cache[pattern] = re.compile(pattern, re.IGNORECASE)
+    return _compiled_regex_cache[pattern]
+
+def get_cached_result(role: str) -> Optional[Dict[str, Any]]:
+    """Get cached classification result"""
+    return _result_cache.get(role.lower().strip())
+
+def cache_result(role: str, result: Dict[str, Any]) -> None:
+    """Cache classification result with size limit"""
+    key = role.lower().strip()
+    if len(_result_cache) >= _cache_max_size:
+        # Remove oldest entry (simple FIFO)
+        oldest_key = next(iter(_result_cache))
+        del _result_cache[oldest_key]
+    _result_cache[key] = result
+
 def any_match(text: str, patterns: List[str]) -> bool:
-    return any(re.search(p, text, re.I) for p in patterns) if patterns else False
+    """Optimized pattern matching with compiled regex"""
+    if not patterns:
+        return False
+    for pattern in patterns:
+        if get_compiled_regex(pattern).search(text):
+            return True
+    return False
 
 
-# ---------------- Owners & C-Suite (prioridad máxima) ----------------
+# Fast early-exit patterns for most common roles (performance optimization)
+FAST_PATTERNS = {
+    # C-Suite (highest priority)
+    r"\bceo\b": ("CEOs", "Ejecutivo"),
+    r"\bcto\b": ("CTOs", "Tecnologia"), 
+    r"\bcfo\b": ("CFOs", "Ejecutivo"),
+    r"\bcmo\b": ("CMOs", "Marketing"),
+    r"\bcoo\b": ("COOs", "Ejecutivo"),
+    
+    # Very common manager roles
+    r"\bmarketing\s+manager\b": ("gerentes de marketing", "Marketing"),
+    r"\bsales\s+manager\b": ("gerentes de ventas", "Ventas"),
+    r"\bhr\s+manager\b": ("gerentes de recursos humanos", "RR.HH."),
+    r"\bproject\s+manager\b": ("project managers", "Tecnologia"),
+    
+    # Technical roles
+    r"\bsoftware\s+engineer\b": ("encargados de tecnologia", "Tecnologia"),
+    r"\bdata\s+scientist\b": ("encargados de tecnologia", "Tecnologia"),
+}
+
+def fast_classify(text: str) -> Optional[Tuple[str, str]]:
+    """Ultra-fast classification for common patterns"""
+    text_lower = text.lower()
+    for pattern, (role, dept) in FAST_PATTERNS.items():
+        if get_compiled_regex(pattern).search(text_lower):
+            return (role, dept)
+    return None
 OWNERS = [
     r"\bfounder(s)?\b", r"\bco[- ]?founder(s)?\b",
     r"\bfundador(a)?s?\b", r"\bco[- ]?fundador(a)?s?\b",
@@ -132,7 +194,7 @@ PRODUCT_SUBDIVISIONS = {
 
 # (patrones, label, departamento destino)
 C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
-    (["\\bcmo\\b","chief marketing officer"],                         "CMOs",          "Marketing"),
+    (["\\bcmo\\b","chief marketing officer","chief marketing"],       "CMOs",          "Marketing"),
     (["\\bcio\\b","chief information officer","chief information technology officer"], "CIOs",          "Tecnologia"),
     (["\\bcto\\b","chief technical officer","chief technology officer","chief transformation & technology officer","ctto","chief of technology","chief product and technology officer","technical chief"], "CTOs",          "Tecnologia"),
     (["\\bciso\\b","chief information security officer"],             "CISOs",         "Tecnologia"),
@@ -163,6 +225,7 @@ SENIORITY_COMMON = [
     r"\bcontroller\b|\bcontrolador\b",
     r"\baccountant\b|\bcontador(a)?\b|\bcontable(s)?\b",
     r"\bdepartment\b|\bdepartamento\b|\bdpto\b",
+    r"\bteam\b|\bequipo\b",  # Agregado para Marketing Team y similares
     # Agregamos roles técnicos y de análisis
     r"\bengineer\b|\bingeniero\b",
     r"\banalyst\b|\banalista\b",
@@ -251,7 +314,7 @@ GEN_SENIORITIES: List[Tuple[str, str]] = [
 
 def seniority_label(text: str) -> Optional[str]:
     for pat, plural in GEN_SENIORITIES:
-        if re.search(pat, text, re.I):
+        if get_compiled_regex(pat).search(text):
             return plural
     return None
 
@@ -383,6 +446,7 @@ SPECIAL_TECH: List[Tuple[str, str]] = [
 SPECIAL_MKT: List[Tuple[str, str]] = [
     (r"\bbrand(ing)?\b.*\bmanager\b|\bbrand manager\b",   "gerentes de marca"),
     (r"\bcontent\b.*\bmanager\b|\bcontent manager\b",     "gerentes de contenido"),
+    (r"\bmarketing team\b",                               "equipos de marketing"),
 ]
 
 # Ventas: atajos comunes
@@ -444,13 +508,13 @@ SPECIAL_PRODUCT: List[Tuple[str, str]] = [
 # ---------------- Motor: “especiales” -> “{seniority} de {área}” ----------------
 def detect_first(text: str, pairs: List[Tuple[str, str]]) -> Optional[str]:
     for pat, label in pairs:
-        if re.search(pat, text, re.I):
+        if get_compiled_regex(pat).search(text):
             return label
     return None
 
 def detect_area(text: str, areas: Dict[str, str]) -> Optional[str]:
     for area, pat in areas.items():
-        if re.search(pat, text, re.I):
+        if get_compiled_regex(pat).search(text):
             return area
     return None
 
@@ -459,7 +523,7 @@ def detect_hierarchy_level(text: str) -> str:
     text_norm = norm(text)
     
     for level, patterns in HIERARCHY_LEVELS.items():
-        if any(re.search(pat, text_norm, re.I) for pat in patterns):
+        if any(get_compiled_regex(pat).search(text_norm) for pat in patterns):
             return level
     
     return "Specialist"  # fallback
@@ -486,7 +550,7 @@ def detect_subdivision(text: str, department: str) -> str:
     for subdivision, patterns in subdivisions.items():
         if subdivision == "General":
             continue
-        if any(re.search(pat, text_norm, re.I) for pat in patterns):
+        if any(get_compiled_regex(pat).search(text_norm) for pat in patterns):
             return subdivision
     
     return "General"  # fallback
@@ -624,8 +688,42 @@ def dynamic_role_label(dep: str, text: str) -> str:
     return f"encargados de {dep.lower()}"
 
 def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]:
+    # Check cache first (only for common case with no external excludes)
+    if not external_excludes:
+        cached = get_cached_result(job_title)
+        if cached:
+            return cached
+
+    # Perform classification
+    result = _classify_one_internal(job_title, external_excludes)
+    
+    # Cache result if no external excludes (most common case)
+    if not external_excludes:
+        cache_result(job_title, result)
+    
+    return result
+
+def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict[str, Any]:
+
     original = job_title
     t = norm(job_title)
+
+    # OPTIMIZATION: Fast path for very common roles (early exit)
+    if not external_excludes:  # Only for simple cases
+        fast_result = fast_classify(job_title)
+        if fast_result:
+            role_generic, department = fast_result
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, department)
+            return {
+                "input": original,
+                "is_icp": True,
+                "department": department,
+                "subdivision": subdivision,
+                "hierarchy_level": hierarchy_level,
+                "role_generic": role_generic,
+                "why": {"matched": "fast_path"}
+            }
 
     # Excludes externos
     if any_match(t, external_excludes):
@@ -635,7 +733,7 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
     if any_match(t, OWNERS):
         # Si tiene términos específicos de C-Suite, damos prioridad a esos
         for pats, label, dep_fn in C_SUITE_MAP:
-            if any(re.search(p, t, re.I) for p in pats):
+            if any(get_compiled_regex(p).search(t) for p in pats):
                 hierarchy_level = detect_hierarchy_level(original)
                 subdivision = detect_subdivision(original, dep_fn)
                 return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": f"{label}_over_owner"}}
@@ -653,14 +751,14 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
     # C-Suite
     for pats, label, dep_fn in C_SUITE_MAP:
-        if any(re.search(p, t, re.I) for p in pats):
+        if any(get_compiled_regex(p).search(t) for p in pats):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, dep_fn)
             return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": label}}
             
     # --- VP / Director / Gerente / Manager "sueltos" -> Ejecutivo genérico
     for pat, plural_label in SOLO_TITLES:
-        if re.search(pat, t, re.I):
+        if get_compiled_regex(pat).search(t):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, "Ejecutivo")
             return {
@@ -675,7 +773,7 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
     # --- Departamento "solo" (Marketing, RRHH, etc.) -> responsables de {dep}
     for pat, (dep_name, role_lbl) in DEPT_STANDALONE:
-        if re.search(pat, t, re.I):
+        if get_compiled_regex(pat).search(t):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, dep_name)
             return {
@@ -742,14 +840,45 @@ def classify_one(job_title: str, external_excludes: List[str]) -> Dict[str, Any]
 
 
 # ---------------- API ----------------
+# Common roles to pre-warm cache at startup
+COMMON_ROLES = [
+    "CEO", "CTO", "CFO", "CMO", "COO", "CIO", "CHRO",
+    "Marketing Manager", "Sales Manager", "Technical Support Manager",
+    "Data Scientist", "Software Engineer", "Product Manager",
+    "HR Manager", "Financial Manager", "Operations Manager",
+    "Director", "VP Marketing", "VP Sales", "VP Technology",
+    "Account Manager", "Project Manager", "Business Analyst"
+]
+
+def warm_cache():
+    """Pre-warm cache with common roles for faster startup performance"""
+    for role in COMMON_ROLES:
+        classify_one(role, [])
+    print(f"✅ Cache warmed with {len(COMMON_ROLES)} common roles")
+
+# Warm cache on startup
+warm_cache()
+
 @app.post("/classify", response_model=Out)
-def classify(inp: In):
+def classify(inp: In, response: Response):
+    # Add cache headers for better client-side caching
+    response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour cache
     external_excludes = to_regex(split_csv(inp.excludes))
+    response.headers["X-Cache-Status"] = "HIT" if not external_excludes and get_cached_result(inp.job_title) else "MISS"
     return classify_one(inp.job_title, external_excludes)
 
 @app.get("/health")
 def health():
     return {"ok": True}
+
+@app.get("/cache-stats")
+def cache_stats():
+    """Get cache performance statistics"""
+    return {
+        "compiled_regex_cache_size": len(_compiled_regex_cache),
+        "result_cache_size": len(_result_cache),
+        "result_cache_max_size": _cache_max_size
+    }
 
 
 
