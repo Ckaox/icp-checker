@@ -1,21 +1,44 @@
 # app.py
 from fastapi import FastAPI, Response
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import ORJSONResponse
 from pydantic import BaseModel
 import re, unicodedata
 from typing import List, Dict, Any, Tuple, Optional
 
-app = FastAPI(title="ICP + Dept + Role (areas+seniority engine)")
+app = FastAPI(
+    title="ICP + Dept + Role (areas+seniority engine)",
+    default_response_class=ORJSONResponse  # Faster JSON serialization
+)
 
 # Add gzip compression for faster responses
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ---------------- Utils ----------------
+# Normalization cache for performance
+_norm_cache: Dict[str, str] = {}
+_norm_cache_max_size = 500
+
 def norm(s: str) -> str:
-    s = (s or "").strip().lower()
-    s = unicodedata.normalize("NFD", s)
-    s = s.encode("ascii", "ignore").decode("ascii")
-    return re.sub(r"\s+", " ", s)
+    """Optimized text normalization with caching"""
+    if not s:
+        return ""
+    
+    # Check cache first
+    if s in _norm_cache:
+        return _norm_cache[s]
+    
+    # Normalize
+    result = s.strip().lower()
+    result = unicodedata.normalize("NFD", result)
+    result = result.encode("ascii", "ignore").decode("ascii")
+    result = re.sub(r"\s+", " ", result)
+    
+    # Cache with size limit
+    if len(_norm_cache) < _norm_cache_max_size:
+        _norm_cache[s] = result
+    
+    return result
 
 def split_csv(s: Optional[str]) -> List[str]:
     if not s: return []
@@ -68,22 +91,41 @@ def any_match(text: str, patterns: List[str]) -> bool:
 
 # Fast early-exit patterns for most common roles (performance optimization)
 FAST_PATTERNS = {
-    # C-Suite (highest priority)
+    # C-Suite (highest priority) - exact matches
     r"\bceo\b": ("CEOs", "Ejecutivo"),
     r"\bcto\b": ("CTOs", "Tecnologia"), 
     r"\bcfo\b": ("CFOs", "Ejecutivo"),
     r"\bcmo\b": ("CMOs", "Marketing"),
     r"\bcoo\b": ("COOs", "Ejecutivo"),
+    r"\bcio\b": ("CIOs", "Tecnologia"),
+    r"\bchro\b": ("CHROs", "RR.HH."),
+    r"\bcso\b": ("CSOs (Sales)", "Ventas"),
+    r"\bcro\b": ("CROs", "Ventas"),
     
-    # Very common manager roles
-    r"\bmarketing\s+manager\b": ("gerentes de marketing", "Marketing"),
-    r"\bsales\s+manager\b": ("gerentes de ventas", "Ventas"),
-    r"\bhr\s+manager\b": ("gerentes de recursos humanos", "RR.HH."),
-    r"\bproject\s+manager\b": ("project managers", "Tecnologia"),
+    # Ultra-common manager patterns
+    r"^marketing\s+manager$": ("gerentes de marketing", "Marketing"),
+    r"^sales\s+manager$": ("gerentes de ventas", "Ventas"),
+    r"^hr\s+manager$": ("gerentes de recursos humanos", "RR.HH."),
+    r"^it\s+manager$": ("gerentes de tecnologia", "Tecnologia"),
+    r"^product\s+manager$": ("product managers", "Producto"),
+    r"^project\s+manager$": ("project managers", "Tecnologia"),
+    r"^account\s+manager$": ("account managers", "Ventas"),
+    r"^brand\s+manager$": ("gerentes de marca", "Marketing"),
+    r"^operations\s+manager$": ("gerentes de operaciones", "Operaciones"),
     
-    # Technical roles
-    r"\bsoftware\s+engineer\b": ("encargados de tecnologia", "Tecnologia"),
-    r"\bdata\s+scientist\b": ("encargados de tecnologia", "Tecnologia"),
+    # Technical roles (very common)
+    r"^software\s+engineer$": ("encargados de tecnologia", "Tecnologia"),
+    r"^data\s+scientist$": ("encargados de tecnologia", "Tecnologia"),
+    r"^system\s+administrator$": ("administradores de sistemas", "Tecnologia"),
+    
+    # New optimized roles
+    r"^chief\s+marketing$": ("CMOs", "Marketing"),
+    r"^marketing\s+team$": ("equipos de marketing", "Marketing"),
+    
+    # Common director patterns
+    r"^marketing\s+director$": ("directores de marketing", "Marketing"),
+    r"^sales\s+director$": ("directores de ventas", "Ventas"),
+    r"^technology\s+director$": ("directores de tecnologia", "Tecnologia"),
 }
 
 def fast_classify(text: str) -> Optional[Tuple[str, str]]:
@@ -840,14 +882,29 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
 
 
 # ---------------- API ----------------
-# Common roles to pre-warm cache at startup
+# Common roles to pre-warm cache at startup (optimized for Clay usage)
 COMMON_ROLES = [
-    "CEO", "CTO", "CFO", "CMO", "COO", "CIO", "CHRO",
+    # C-Suite (most frequent)
+    "CEO", "CTO", "CFO", "CMO", "COO", "CIO", "CHRO", "CSO", "CRO",
+    
+    # Managers (very common in Clay)
     "Marketing Manager", "Sales Manager", "Technical Support Manager",
-    "Data Scientist", "Software Engineer", "Product Manager",
-    "HR Manager", "Financial Manager", "Operations Manager",
-    "Director", "VP Marketing", "VP Sales", "VP Technology",
-    "Account Manager", "Project Manager", "Business Analyst"
+    "HR Manager", "IT Manager", "Operations Manager", "Financial Manager",
+    "Product Manager", "Project Manager", "Account Manager", "Brand Manager",
+    
+    # Directors & VPs
+    "Marketing Director", "Sales Director", "Technology Director", "HR Director",
+    "VP Marketing", "VP Sales", "VP Technology", "VP Operations",
+    
+    # Technical roles
+    "Software Engineer", "Data Scientist", "System Administrator", "Engineer",
+    
+    # New roles
+    "Chief Marketing", "Marketing Team",
+    
+    # Common variations
+    "Director of Marketing", "Head of Sales", "Engineering Manager",
+    "Business Analyst", "Content Manager"
 ]
 
 def warm_cache():
@@ -859,13 +916,29 @@ def warm_cache():
 # Warm cache on startup
 warm_cache()
 
-@app.post("/classify", response_model=Out)
+@app.post("/classify")
 def classify(inp: In, response: Response):
-    # Add cache headers for better client-side caching
-    response.headers["Cache-Control"] = "public, max-age=3600"  # 1 hour cache
-    external_excludes = to_regex(split_csv(inp.excludes))
+    """Ultra-optimized endpoint with all performance enhancements"""
+    # Skip excludes processing if empty (most common case) - optimization from classify-fast
+    if not inp.excludes or inp.excludes.strip() == "":
+        external_excludes = []
+    else:
+        external_excludes = to_regex(split_csv(inp.excludes))
+    
+    # Optimized headers
+    response.headers["Cache-Control"] = "public, max-age=7200"  # 2 hour cache
     response.headers["X-Cache-Status"] = "HIT" if not external_excludes and get_cached_result(inp.job_title) else "MISS"
-    return classify_one(inp.job_title, external_excludes)
+    
+    # Ultra-fast path for empty inputs (enhanced validation)
+    if not inp.job_title or len(inp.job_title.strip()) < 2:
+        return ORJSONResponse({"input": inp.job_title, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"empty_input": True}})
+    
+    result = classify_one(inp.job_title, external_excludes)
+    
+    # Add performance metrics
+    response.headers["X-Fast-Path"] = "1" if result.get("why", {}).get("matched") == "fast_path" else "0"
+    
+    return ORJSONResponse(result)
 
 @app.get("/health")
 def health():
