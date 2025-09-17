@@ -14,6 +14,17 @@ app = FastAPI(
 # Add gzip compression for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+# Proyectos (temporal - se moverá después)
+SPECIAL_PROJECTS: List[Tuple[str, str]] = [
+    (r"(?:project manager|pm\b|gestor de proyectos|jefe de proyecto)", "project managers"),
+    (r"(?:project director|director de proyectos)",                    "directores de proyectos"),
+    (r"(?:project coordinator|coordinador de proyectos)",              "coordinadores de proyectos"),
+    (r"(?:project lead|líder de proyecto)",                            "líderes de proyectos"),
+    (r"(?:pmo|project management office|oficina de proyectos)",        "responsables de PMO"),
+    (r"(?:scrum master|agile coach)",                                   "scrum masters"),
+    (r"(?:pmo\s+senior|senior\s+pmo)",                                 "seniors de PMO"),
+]
+
 # ---------------- Utils ----------------
 # Normalization cache for performance
 _norm_cache: Dict[str, str] = {}
@@ -234,6 +245,15 @@ PRODUCT_SUBDIVISIONS = {
     "General": []  # fallback
 }
 
+PROJECTS_SUBDIVISIONS = {
+    "Gestión": [r"\bmanagement\b", r"\bmanager\b", r"\bpm\b"],
+    "Planificación": [r"\bplanning\b", r"\bschedule\b", r"\bcronograma\b"],
+    "Coordinación": [r"\bcoordination\b", r"\bcoordinator\b"],
+    "Implementación": [r"\bimplementation\b", r"\bdeployment\b", r"\bexecution\b"],
+    "Metodologías": [r"\bagile\b", r"\bscrum\b", r"\bwaterfall\b", r"\bpmi\b"],
+    "General": []  # fallback
+}
+
 # (patrones, label, departamento destino)
 C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bcmo\\b","chief marketing officer","chief marketing"],       "CMOs",          "Marketing"),
@@ -277,6 +297,8 @@ SENIORITY_COMMON = [
     r"\bconsultant\b|\bconsultor(a)?\b",
     r"\bplanner\b|\bplanificador(a)?\b",  # Agregado para Financial Planner
     r"\brecruiter\b|\breclutador(a)?\b",  # Agregado para Recruiter
+    r"\bsupervisor\b|\bsupervisor(a)?\b",  # Agregado para Operations Supervisor
+    r"\bpmo\b",  # Agregado específicamente para PMO
 ]
 
 EXCLUDE_COMMON = [
@@ -297,6 +319,9 @@ SOLO_TITLES = [
     (r"^\s*director(a)?\s*$",                  "directores"),
     (r"^\s*gerente\s*$",                       "gerentes"),
     (r"^\s*manager\s*$",                       "managers"),
+    (r"^\s*ejecutiv[oa]s?\s*$",               "ejecutivos"),
+    (r"^\s*administraci[óo]n\s*$",            "responsables de administración"),
+    (r"^\s*administrativ[oa]s?\s*$",          "administrativos"),
 ]
 
 # ---- Departamentos "solo" (nombres/abreviaturas) -> responsables de {dep}
@@ -338,6 +363,9 @@ MKT_HINTS = [
 
 OPS_HINTS = [
     r"\boperaciones\b|\boperations\b|\bops\b",
+    r"\bindustrial\b|\bmanufactur\b|\bfabric\b|\bconstrucci[oó]n\b|\bconstruction\b",
+    r"\bproducci[oó]n\b|\bproduction\b|\bplanta\b|\bplant\b",
+    r"\bcalidad\b|\bquality\b|\bmantenimiento\b|\bmaintenance\b",
 ]
 
 # ---------------- Seniorities genéricos (forman “{seniority} de {área}”) ----------------
@@ -352,6 +380,8 @@ GEN_SENIORITIES: List[Tuple[str, str]] = [
     (r"(?:\bstrategist\b|\bestratega\b)",                       "estrategas"),
     (r"(?:\bejecutiv[oa]s?\b|\bexecutive\b)",                   "ejecutivos"),
     (r"(?:\bgestor(es)?\b)",                                    "gestores"),
+    (r"(?:\bsupervisor\b|\bsupervisor(a)?\b)",                  "supervisores"),
+    (r"(?:\bpmo\b)",                                            "responsables de PMO"),
 ]
 
 def seniority_label(text: str) -> Optional[str]:
@@ -465,6 +495,15 @@ PRODUCT_AREAS = {
     "research":           r"(?:user research|investigación|market research)",
 }
 
+PROJECTS_AREAS = {
+    "gestión":            r"(?:project management|gestión de proyectos|project manager|pm\b)",
+    "planificación":      r"(?:planning|planificación|schedule|cronograma)",
+    "coordinación":       r"(?:coordination|coordinación|coordinator)",
+    "seguimiento":        r"(?:tracking|seguimiento|monitoring|control)",
+    "implementación":     r"(?:implementation|implementación|deployment|despliegue)",
+    "metodologías":       r"(?:agile|scrum|waterfall|metodologías|pmi|prince2)",
+}
+
 
 # ---------------- Reglas especiales (labels fijos por depto) ----------------
 # Tecnología: sysadmin/netadmin/QA/PM/DevOps, etc.
@@ -535,6 +574,11 @@ SPECIAL_OPS: List[Tuple[str, str]] = [
     (r"(?:fulfillment|operaci[oó]n de pedidos|preparaci[oó]n de pedidos)", "responsables de fulfillment"),
     (r"(?:customer service|servicio al cliente|soporte|support)",   "responsables de servicio al cliente"),
     (r"(?:health & safety|seguridad e higiene|hse|ehs|seguridad industrial)", "responsables de seguridad e higiene"),
+    (r"(?:director\s+industrial|industrial\s+director)", "directores industriales"),
+    (r"(?:operation\s+director|director\s+de\s+operaciones)", "directores de operaciones"),
+    (r"(?:operation\s+manager|gerente\s+de\s+operaciones)", "gerentes de operaciones"),
+    (r"(?:operations\s+supervisor|supervisor\s+de\s+operaciones)", "supervisores de operaciones"),
+    (r"(?:production\s+director|director\s+de\s+producci[oó]n)", "directores de producción"),
 ]
 
 # Producto
@@ -582,6 +626,7 @@ def detect_subdivision(text: str, department: str) -> str:
         "Operaciones": OPERATIONS_SUBDIVISIONS,
         "RR. HH.": HR_SUBDIVISIONS,
         "Producto": PRODUCT_SUBDIVISIONS,
+        "Proyectos": PROJECTS_SUBDIVISIONS,
     }
     
     if department not in subdivision_map:
@@ -634,7 +679,7 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
             r"\btechnical\b|\btecnico\b", r"\bengineering\b|\bingenier[íi]a\b|\bengineer\b",
             r"\bproject\b|\bproyecto\b", r"\bqa\b|\bquality\b",
             r"\bde tecnolog[íi]a\b", r"\borganizaci[oó]n\b", r"\bde la informaci[oó]n\b",
-            r"\bde proyectos\b|\bÁrea\b|\barea\b",
+            r"\bde proyectos\b",
             r"\bdata\b|\banalytics\b|\bscience\b",  # Agregado para Data Scientist
             r"\bdatabase\b|\bdb\b",  # Agregado para Database Administrator
             r"\bsystem\b|\bnetwork\b",  # Agregado para System/Network Administrator
@@ -692,7 +737,7 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "areas": LEGAL_AREAS, "specials": SPECIAL_LEGAL,
     }),
     ("Operaciones", {
-        "must": [r"(?:operaciones|operations|ops|log[íi]stica|logistics|supply ?chain|fulfillment|warehouse|almac[eé]n)"],
+        "must": [r"(?:operaciones|operations|ops|log[íi]stica|logistics|supply ?chain|fulfillment|warehouse|almac[eé]n|industrial|production|producci[oó]n|operation|supervisor)"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
         "areas": OPS_AREAS, "specials": SPECIAL_OPS,
@@ -702,6 +747,12 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
         "areas": PRODUCT_AREAS, "specials": SPECIAL_PRODUCT,
+    }),
+    ("Proyectos", {
+        "must": [r"(?:project|proyecto|project management|gestión de proyectos|pm\b|pmo|scrum|agile)"],
+        "seniority": SENIORITY_COMMON,
+        "exclude": EXCLUDE_COMMON,
+        "areas": PROJECTS_AREAS, "specials": SPECIAL_PROJECTS,
     }),
 ]
 
@@ -798,6 +849,46 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
             subdivision = detect_subdivision(original, dep_fn)
             return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": label}}
             
+    # --- Area Director / Area Manager -> Ejecutivo (más genéricos)
+    area_roles_pattern = r"\barea\s+(director|manager|gerente)\b"
+    if get_compiled_regex(area_roles_pattern).search(t):
+        role_label = "directores" if "director" in t.lower() else "gerentes"
+        hierarchy_level = detect_hierarchy_level(original)
+        subdivision = detect_subdivision(original, "Ejecutivo")
+        return {
+            "input": original,
+            "is_icp": True,
+            "department": "Ejecutivo",
+            "subdivision": subdivision,
+            "hierarchy_level": hierarchy_level,
+            "role_generic": role_label,
+            "why": {"matched": "area_roles"}
+        }
+
+    # --- Nuevos roles específicos de Ejecutivo
+    ejecutivo_patterns = [
+        (r"\bassociate\s+director\b", "directores asociados"),
+        (r"\bdirector\s+of\s+administration\b", "directores de administración"),
+        (r"\bdirector\s+regional\b", "directores regionales"),
+        (r"\bregional\s+director\b", "directores regionales"),
+        (r"\bgeneral\s+director\b", "directores generales"),
+        (r"\bhead\s+of\s+department\b", "jefes de departamento"),
+    ]
+    
+    for pattern, label in ejecutivo_patterns:
+        if get_compiled_regex(pattern).search(t):
+            hierarchy_level = detect_hierarchy_level(original)
+            subdivision = detect_subdivision(original, "Ejecutivo")
+            return {
+                "input": original,
+                "is_icp": True,
+                "department": "Ejecutivo",
+                "subdivision": subdivision,
+                "hierarchy_level": hierarchy_level,
+                "role_generic": label,
+                "why": {"matched": "nuevos_ejecutivo_roles"}
+            }
+
     # --- VP / Director / Gerente / Manager "sueltos" -> Ejecutivo genérico
     for pat, plural_label in SOLO_TITLES:
         if get_compiled_regex(pat).search(t):
@@ -837,7 +928,7 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
         elif any_match(t, OPS_HINTS):
             dep = "Operaciones"
         else:
-            dep = "Tecnologia"
+            dep = "Proyectos"  # Cambiado de "Tecnologia" a "Proyectos"
 
         sen = seniority_label(t) or "responsables"
         label = f"{sen} de proyectos"
