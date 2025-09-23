@@ -14,17 +14,6 @@ app = FastAPI(
 # Add gzip compression for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-# Proyectos (temporal - se moverá después)
-SPECIAL_PROJECTS: List[Tuple[str, str]] = [
-    (r"(?:project manager|pm\b|gestor de proyectos|jefe de proyecto)", "project managers"),
-    (r"(?:project director|director de proyectos)",                    "directores de proyectos"),
-    (r"(?:project coordinator|coordinador de proyectos)",              "coordinadores de proyectos"),
-    (r"(?:project lead|líder de proyecto)",                            "líderes de proyectos"),
-    (r"(?:pmo|project management office|oficina de proyectos)",        "responsables de PMO"),
-    (r"(?:scrum master|agile coach)",                                   "scrum masters"),
-    (r"(?:pmo\s+senior|senior\s+pmo)",                                 "seniors de PMO"),
-]
-
 # ---------------- Utils ----------------
 # Normalization cache for performance
 _norm_cache: Dict[str, str] = {}
@@ -63,6 +52,176 @@ def to_regex(items: List[str]) -> List[str]:
         else:
             out.append(r"\b" + re.escape(it) + r"\b")
     return out
+
+def singularize_role(role_generic: str) -> str:
+    """Convierte roles genéricos plurales a singular"""
+    if not role_generic:
+        return ""
+    
+    # Diccionario de conversiones específicas
+    singular_map = {
+        # C-Suite
+        "CEOs": "CEO",
+        "CFOs": "CFO", 
+        "CTOs": "CTO",
+        "CMOs": "CMO",
+        "COOs": "COO",
+        "CIOs": "CIO",
+        "CHROs": "CHRO",
+        "CSOs (Sales)": "CSO (Sales)",
+        "CROs": "CRO",
+        "CDOs": "CDO",
+        "CAOs": "CAO",
+        "CQAs": "CQA",
+        "CISOs": "CISO",
+        "CCOs": "CCO",
+        
+        # Roles genéricos plurales
+        "propietarios": "propietario",
+        "directores": "director",
+        "gerentes": "gerente", 
+        "managers": "manager",
+        "vicepresidentes": "vicepresidente",
+        "ejecutivos": "ejecutivo",
+        "coordinadores": "coordinador",
+        "responsables": "responsable",
+        "estrategas": "estratega",
+        "gestores": "gestor",
+        "supervisores": "supervisor",
+        "administrativos": "administrativo",
+        
+        # Roles específicos con "de"
+        "directores generales": "director general",
+        "directores asociados": "director asociado",
+        "directores regionales": "director regional",
+        "jefes de departamento": "jefe de departamento",
+        "directores de administración": "director de administración",
+        
+        # Tecnología
+        "gerentes de tecnología": "gerente de tecnología",
+        "gerentes de tecnologia": "gerente de tecnologia",
+        "gerentes de ti": "gerente de ti", 
+        "administradores de sistemas": "administrador de sistemas",
+        "administradores de redes": "administrador de redes",
+        "líderes de qa": "líder de qa",
+        "project managers": "project manager",
+        "gerentes técnicos": "gerente técnico",
+        "directores técnicos": "director técnico",
+        "líderes técnicos": "líder técnico",
+        "analistas técnicos": "analista técnico",
+        "gerentes de soporte": "gerente de soporte",
+        "responsables de soporte al cliente": "responsable de soporte al cliente",
+        
+        # Marketing
+        "gerentes de marketing": "gerente de marketing",
+        "gerentes de marca": "gerente de marca",
+        "gerentes de contenido": "gerente de contenido",
+        "equipos de marketing": "equipo de marketing",
+        "directores de marketing": "director de marketing",
+        
+        # Ventas
+        "gerentes de ventas": "gerente de ventas",
+        "account managers": "account manager",
+        "account executives": "account executive",
+        "directores de ventas": "director de ventas",
+        
+        # Finanzas
+        "gerentes de finanzas": "gerente de finanzas",
+        "directores financieros": "director financiero",
+        "responsables de control de gestión": "responsable de control de gestión",
+        "responsables contables": "responsable contable",
+        "responsables de tesorería": "responsable de tesorería",
+        "responsables fiscales": "responsable fiscal",
+        "responsables de cuentas por cobrar": "responsable de cuentas por cobrar",
+        "responsables de cuentas por pagar": "responsable de cuentas por pagar",
+        "responsables de FP&A": "responsable de FP&A",
+        
+        # RR.HH.
+        "gerentes de recursos humanos": "gerente de recursos humanos",
+        "gerentes de rrhh": "gerente de rrhh",
+        "directores de rrhh": "director de rrhh",
+        "reclutadores": "reclutador",
+        "business partners de rr. hh.": "business partner de rr. hh.",
+        "responsables de nómina": "responsable de nómina",
+        "responsables de compensaciones y beneficios": "responsable de compensaciones y beneficios",
+        "responsables de capacitación": "responsable de capacitación",
+        
+        # Legal
+        "gerentes legales": "gerente legal",
+        
+        # Operaciones  
+        "gerentes de operaciones": "gerente de operaciones",
+        
+        # Producto
+        "gerentes de producto": "gerente de producto",
+        "product managers": "product manager",
+        
+        # Proyectos
+        "gerentes de proyectos": "gerente de proyectos",
+        
+        # Legal
+        "general counsels": "general counsel",
+        "asesores legales": "asesor legal",
+        "responsables de contratos": "responsable de contratos",
+        "responsables de compliance": "responsable de compliance",
+        "responsables de privacidad": "responsable de privacidad",
+        
+        # Operaciones
+        "responsables de logística": "responsable de logística",
+        "responsables de supply chain": "responsable de supply chain",
+        "responsables de fulfillment": "responsable de fulfillment",
+        "responsables de servicio al cliente": "responsable de servicio al cliente",
+        "responsables de seguridad e higiene": "responsable de seguridad e higiene",
+        "directores industriales": "director industrial",
+        "directores de operaciones": "director de operaciones",
+        "gerentes de operaciones": "gerente de operaciones",
+        "supervisores de operaciones": "supervisor de operaciones",
+        "directores de producción": "director de producción",
+        
+        # Producto
+        "product managers": "product manager",
+        "product owners": "product owner",
+        "directores de producto": "director de producto",
+        "responsables de diseño de producto": "responsable de diseño de producto",
+        "investigadores de usuario": "investigador de usuario",
+        
+        # Proyectos
+        "directores de proyectos": "director de proyectos",
+        "coordinadores de proyectos": "coordinador de proyectos",
+        "líderes de proyectos": "líder de proyectos",
+        "responsables de PMO": "responsable de PMO",
+        "scrum masters": "scrum master",
+        "seniors de PMO": "senior de PMO",
+    }
+    
+    # Buscar coincidencia exacta primero
+    if role_generic in singular_map:
+        return singular_map[role_generic]
+    
+    # Reglas genéricas para casos no cubiertos
+    # Convertir "X de Y" plural a singular
+    if " de " in role_generic:
+        parts = role_generic.split(" de ", 1)
+        if len(parts) == 2:
+            first_part = parts[0]
+            second_part = parts[1]
+            
+            # Singularizar la primera parte
+            if first_part.endswith("es") and len(first_part) > 3:
+                first_part = first_part[:-2]  # "gerentes" -> "gerente"
+            elif first_part.endswith("s") and len(first_part) > 2:
+                first_part = first_part[:-1]  # "directores" -> "director"
+            
+            return f"{first_part} de {second_part}"
+    
+    # Reglas simples para palabras sueltas
+    if role_generic.endswith("es") and len(role_generic) > 3:
+        return role_generic[:-2]  # "gerentes" -> "gerente"
+    elif role_generic.endswith("s") and len(role_generic) > 2 and not role_generic.endswith("us"):
+        return role_generic[:-1]  # "directores" -> "director"
+    
+    # Si no se puede singularizar, devolver tal como está
+    return role_generic
 
 # Compiled regex cache for performance
 _compiled_regex_cache: Dict[str, re.Pattern] = {}
@@ -110,7 +269,7 @@ FAST_PATTERNS = {
     r"\bcoo\b": ("COOs", "Ejecutivo"),
     r"\bcio\b": ("CIOs", "Tecnologia"),
     r"\bchro\b": ("CHROs", "RR.HH."),
-    r"\bcso\b": ("CSOs (Sales)", "Ventas"),
+    r"\bcso\b": ("CSOs", "Ventas"),
     r"\bcro\b": ("CROs", "Ventas"),
     
     # Ultra-common manager patterns
@@ -123,6 +282,17 @@ FAST_PATTERNS = {
     r"^account\s+manager$": ("account managers", "Ventas"),
     r"^brand\s+manager$": ("gerentes de marca", "Marketing"),
     r"^operations\s+manager$": ("gerentes de operaciones", "Operaciones"),
+    
+    # Spanish patterns
+    r"^gerentes?\s+de\s+marketing$": ("gerentes de marketing", "Marketing"),
+    r"^gerentes?\s+de\s+ventas$": ("gerentes de ventas", "Ventas"),
+    r"^gerentes?\s+de\s+recursos\s+humanos$": ("gerentes de recursos humanos", "RR.HH."),
+    r"^gerentes?\s+de\s+tecnolog[íi]a$": ("gerentes de tecnologia", "Tecnologia"),
+    r"^gerentes?\s+de\s+producto$": ("gerentes de producto", "Producto"),
+    r"^gerentes?\s+de\s+proyectos$": ("gerentes de proyectos", "Proyectos"),
+    r"^directores?\s+de\s+marketing$": ("directores de marketing", "Marketing"),
+    r"^directores?\s+de\s+ventas$": ("directores de ventas", "Ventas"),
+    r"^directores?\s+de\s+finanzas$": ("directores de finanzas", "Finanzas"),
     
     # Technical roles (very common)
     r"^software\s+engineer$": ("encargados de tecnologia", "Tecnologia"),
@@ -297,8 +467,6 @@ SENIORITY_COMMON = [
     r"\bconsultant\b|\bconsultor(a)?\b",
     r"\bplanner\b|\bplanificador(a)?\b",  # Agregado para Financial Planner
     r"\brecruiter\b|\breclutador(a)?\b",  # Agregado para Recruiter
-    r"\bsupervisor\b|\bsupervisor(a)?\b",  # Agregado para Operations Supervisor
-    r"\bpmo\b",  # Agregado específicamente para PMO
 ]
 
 EXCLUDE_COMMON = [
@@ -380,8 +548,6 @@ GEN_SENIORITIES: List[Tuple[str, str]] = [
     (r"(?:\bstrategist\b|\bestratega\b)",                       "estrategas"),
     (r"(?:\bejecutiv[oa]s?\b|\bexecutive\b)",                   "ejecutivos"),
     (r"(?:\bgestor(es)?\b)",                                    "gestores"),
-    (r"(?:\bsupervisor\b|\bsupervisor(a)?\b)",                  "supervisores"),
-    (r"(?:\bpmo\b)",                                            "responsables de PMO"),
 ]
 
 def seniority_label(text: str) -> Optional[str]:
@@ -575,10 +741,6 @@ SPECIAL_OPS: List[Tuple[str, str]] = [
     (r"(?:customer service|servicio al cliente|soporte|support)",   "responsables de servicio al cliente"),
     (r"(?:health & safety|seguridad e higiene|hse|ehs|seguridad industrial)", "responsables de seguridad e higiene"),
     (r"(?:director\s+industrial|industrial\s+director)", "directores industriales"),
-    (r"(?:operation\s+director|director\s+de\s+operaciones)", "directores de operaciones"),
-    (r"(?:operation\s+manager|gerente\s+de\s+operaciones)", "gerentes de operaciones"),
-    (r"(?:operations\s+supervisor|supervisor\s+de\s+operaciones)", "supervisores de operaciones"),
-    (r"(?:production\s+director|director\s+de\s+producci[oó]n)", "directores de producción"),
 ]
 
 # Producto
@@ -588,6 +750,17 @@ SPECIAL_PRODUCT: List[Tuple[str, str]] = [
     (r"(?:product director|director de producto)",                  "directores de producto"),
     (r"(?:ux|ui|user experience|user interface|diseño de producto)", "responsables de diseño de producto"),
     (r"(?:user research|investigación de usuario)",                 "investigadores de usuario"),
+]
+
+# Proyectos
+SPECIAL_PROJECTS: List[Tuple[str, str]] = [
+    (r"(?:project manager|pm\b|gestor de proyectos|jefe de proyecto)", "project managers"),
+    (r"(?:project director|director de proyectos)",                    "directores de proyectos"),
+    (r"(?:project coordinator|coordinador de proyectos)",              "coordinadores de proyectos"),
+    (r"(?:project lead|líder de proyecto)",                            "líderes de proyectos"),
+    (r"(?:pmo|project management office|oficina de proyectos)",        "responsables de PMO"),
+    (r"(?:scrum master|agile coach)",                                   "scrum masters"),
+    (r"(?:pmo\s+senior|senior\s+pmo)",                                 "seniors de PMO"),
 ]
 
 
@@ -737,7 +910,7 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "areas": LEGAL_AREAS, "specials": SPECIAL_LEGAL,
     }),
     ("Operaciones", {
-        "must": [r"(?:operaciones|operations|ops|log[íi]stica|logistics|supply ?chain|fulfillment|warehouse|almac[eé]n|industrial|production|producci[oó]n|operation|supervisor)"],
+        "must": [r"(?:operaciones|operations|ops|log[íi]stica|logistics|supply ?chain|fulfillment|warehouse|almac[eé]n|industrial)"],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
         "areas": OPS_AREAS, "specials": SPECIAL_OPS,
@@ -769,10 +942,30 @@ class Out(BaseModel):
     subdivision: str
     hierarchy_level: str
     role_generic: str
+    role_generic_singular: str
     why: Dict[str, Any]
 
 
 # ---------------- Core ----------------
+def create_result(original: str, is_icp: bool, department: str = "", subdivision: str = "", 
+                 hierarchy_level: str = "", role_generic: str = "", why: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Helper function to create consistent results with role_generic_singular"""
+    if why is None:
+        why = {}
+    
+    role_generic_singular = singularize_role(role_generic) if role_generic else ""
+    
+    return {
+        "input": original,
+        "is_icp": is_icp,
+        "department": department,
+        "subdivision": subdivision,
+        "hierarchy_level": hierarchy_level,
+        "role_generic": role_generic,
+        "role_generic_singular": role_generic_singular,
+        "why": why
+    }
+
 def dynamic_role_label(dep: str, text: str) -> str:
     # Último fallback: usa seniority si lo encuentra; si no, “encargados de …”
     sen = seniority_label(text)
@@ -808,19 +1001,11 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
             role_generic, department = fast_result
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, department)
-            return {
-                "input": original,
-                "is_icp": True,
-                "department": department,
-                "subdivision": subdivision,
-                "hierarchy_level": hierarchy_level,
-                "role_generic": role_generic,
-                "why": {"matched": "fast_path"}
-            }
+            return create_result(original, True, department, subdivision, hierarchy_level, role_generic, {"matched": "fast_path"})
 
     # Excludes externos
     if any_match(t, external_excludes):
-        return {"input": original, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"excluded_by": "external_excludes"}}
+        return create_result(original, False, why={"excluded_by": "external_excludes"})
 
     # Owners (pero damos prioridad a C-Suite específicos)
     if any_match(t, OWNERS):
@@ -829,25 +1014,25 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
             if any(get_compiled_regex(p).search(t) for p in pats):
                 hierarchy_level = detect_hierarchy_level(original)
                 subdivision = detect_subdivision(original, dep_fn)
-                return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": f"{label}_over_owner"}}
+                return create_result(original, True, dep_fn, subdivision, hierarchy_level, label, {"matched": f"{label}_over_owner"})
         
         # Si no hay C-Suite específico, entonces es propietario
         hierarchy_level = detect_hierarchy_level(original)
         subdivision = detect_subdivision(original, "Ejecutivo")
-        return {"input": original, "is_icp": True, "department": "Ejecutivo", "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": "propietarios", "why": {"matched": "owners"}}
+        return create_result(original, True, "Ejecutivo", subdivision, hierarchy_level, "propietarios", {"matched": "owners"})
 
     # General Management
     if any_match(t, GENERAL_MANAGEMENT):
         hierarchy_level = detect_hierarchy_level(original)
         subdivision = detect_subdivision(original, "Ejecutivo")
-        return {"input": original, "is_icp": True, "department": "Ejecutivo", "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": "directores", "why": {"matched": "general_management"}}
+        return create_result(original, True, "Ejecutivo", subdivision, hierarchy_level, "directores", {"matched": "general_management"})
 
     # C-Suite
     for pats, label, dep_fn in C_SUITE_MAP:
         if any(get_compiled_regex(p).search(t) for p in pats):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, dep_fn)
-            return {"input": original, "is_icp": True, "department": dep_fn, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label, "why": {"matched": label}}
+            return create_result(original, True, dep_fn, subdivision, hierarchy_level, label, {"matched": label})
             
     # --- Area Director / Area Manager -> Ejecutivo (más genéricos)
     area_roles_pattern = r"\barea\s+(director|manager|gerente)\b"
@@ -855,15 +1040,7 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
         role_label = "directores" if "director" in t.lower() else "gerentes"
         hierarchy_level = detect_hierarchy_level(original)
         subdivision = detect_subdivision(original, "Ejecutivo")
-        return {
-            "input": original,
-            "is_icp": True,
-            "department": "Ejecutivo",
-            "subdivision": subdivision,
-            "hierarchy_level": hierarchy_level,
-            "role_generic": role_label,
-            "why": {"matched": "area_roles"}
-        }
+        return create_result(original, True, "Ejecutivo", subdivision, hierarchy_level, role_label, {"matched": "area_roles"})
 
     # --- Nuevos roles específicos de Ejecutivo
     ejecutivo_patterns = [
@@ -871,53 +1048,27 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
         (r"\bdirector\s+of\s+administration\b", "directores de administración"),
         (r"\bdirector\s+regional\b", "directores regionales"),
         (r"\bregional\s+director\b", "directores regionales"),
-        (r"\bgeneral\s+director\b", "directores generales"),
-        (r"\bhead\s+of\s+department\b", "jefes de departamento"),
     ]
     
     for pattern, label in ejecutivo_patterns:
         if get_compiled_regex(pattern).search(t):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, "Ejecutivo")
-            return {
-                "input": original,
-                "is_icp": True,
-                "department": "Ejecutivo",
-                "subdivision": subdivision,
-                "hierarchy_level": hierarchy_level,
-                "role_generic": label,
-                "why": {"matched": "nuevos_ejecutivo_roles"}
-            }
+            return create_result(original, True, "Ejecutivo", subdivision, hierarchy_level, label, {"matched": "nuevos_ejecutivo_roles"})
 
     # --- VP / Director / Gerente / Manager "sueltos" -> Ejecutivo genérico
     for pat, plural_label in SOLO_TITLES:
         if get_compiled_regex(pat).search(t):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, "Ejecutivo")
-            return {
-                "input": original,
-                "is_icp": True,
-                "department": "Ejecutivo",
-                "subdivision": subdivision,
-                "hierarchy_level": hierarchy_level,
-                "role_generic": plural_label,
-                "why": {"matched": "solo_title"}
-            }
+            return create_result(original, True, "Ejecutivo", subdivision, hierarchy_level, plural_label, {"matched": "solo_title"})
 
     # --- Departamento "solo" (Marketing, RRHH, etc.) -> responsables de {dep}
     for pat, (dep_name, role_lbl) in DEPT_STANDALONE:
         if get_compiled_regex(pat).search(t):
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, dep_name)
-            return {
-                "input": original,
-                "is_icp": True,
-                "department": dep_name,
-                "subdivision": subdivision,
-                "hierarchy_level": hierarchy_level,
-                "role_generic": role_lbl,
-                "why": {"matched": "standalone_department"}
-            }
+            return create_result(original, True, dep_name, subdivision, hierarchy_level, role_lbl, {"matched": "standalone_department"})
 
     # --- Router específico para Proyectos (PM / Director de Proyectos) ---
     if re.search(PM_PATTERN, t, re.I):
@@ -928,21 +1079,13 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
         elif any_match(t, OPS_HINTS):
             dep = "Operaciones"
         else:
-            dep = "Proyectos"  # Cambiado de "Tecnologia" a "Proyectos"
+            dep = "Tecnologia"
 
         sen = seniority_label(t) or "responsables"
         label = f"{sen} de proyectos"
         hierarchy_level = detect_hierarchy_level(original)
         subdivision = detect_subdivision(original, dep)
-        return {
-            "input": original,
-            "is_icp": True,
-            "department": dep,
-            "subdivision": subdivision,
-            "hierarchy_level": hierarchy_level,
-            "role_generic": label,
-            "why": {"matched": "pm_router", "department_routed": dep}
-        }
+        return create_result(original, True, dep, subdivision, hierarchy_level, label, {"matched": "pm_router", "department_routed": dep})
                 
     # Tie-break Marketing sobre Ventas
     marketing_signal = bool(re.search(r"\bmarketing\b", t, re.I))
@@ -961,15 +1104,13 @@ def _classify_one_internal(job_title: str, external_excludes: List[str]) -> Dict
             hierarchy_level = detect_hierarchy_level(original)
             subdivision = detect_subdivision(original, dep)
             if label:
-                return {"input": original, "is_icp": True, "department": dep, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": label,
-                        "why": {"must": True, "seniority": True, "exclude": False, "matched": "area+seniority/special"}}
+                return create_result(original, True, dep, subdivision, hierarchy_level, label, {"must": True, "seniority": True, "exclude": False, "matched": "area+seniority/special"})
             # Fallback final
             dyn = dynamic_role_label(dep, t)
-            return {"input": original, "is_icp": True, "department": dep, "subdivision": subdivision, "hierarchy_level": hierarchy_level, "role_generic": dyn,
-                    "why": {"must": True, "seniority": True, "exclude": False, "matched": "fallback"}}
+            return create_result(original, True, dep, subdivision, hierarchy_level, dyn, {"must": True, "seniority": True, "exclude": False, "matched": "fallback"})
 
     # Sin match
-    return {"input": original, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"no_match": True}}
+    return create_result(original, False, why={"no_match": True})
 
 
 # ---------------- API ----------------
@@ -1022,7 +1163,7 @@ def classify(inp: In, response: Response):
     
     # Ultra-fast path for empty inputs (enhanced validation)
     if not inp.job_title or len(inp.job_title.strip()) < 2:
-        return ORJSONResponse({"input": inp.job_title, "is_icp": False, "department": "", "subdivision": "", "hierarchy_level": "", "role_generic": "", "why": {"empty_input": True}})
+        return ORJSONResponse(create_result(inp.job_title, False, why={"empty_input": True}))
     
     result = classify_one(inp.job_title, external_excludes)
     
