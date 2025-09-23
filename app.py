@@ -135,6 +135,8 @@ def singularize_role(role_generic: str) -> str:
         "responsables de cuentas por cobrar": "responsable de cuentas por cobrar",
         "responsables de cuentas por pagar": "responsable de cuentas por pagar",
         "responsables de FP&A": "responsable de FP&A",
+        "responsables de proyectos": "responsable de proyectos",
+        "responsables de operaciones": "responsable de operaciones",
         
         # RR.HH.
         "gerentes de recursos humanos": "gerente de recursos humanos",
@@ -151,6 +153,7 @@ def singularize_role(role_generic: str) -> str:
         
         # Operaciones  
         "gerentes de operaciones": "gerente de operaciones",
+        "responsables de supply chain": "responsable de logística",
         
         # Producto
         "gerentes de producto": "gerente de producto",
@@ -158,6 +161,20 @@ def singularize_role(role_generic: str) -> str:
         
         # Proyectos
         "gerentes de proyectos": "gerente de proyectos",
+        "directores de proyectos": "director de proyectos", 
+        "directores de PMO": "director de PMO",
+        
+        # Ejecutivos
+        "CEOs": "CEO",
+        "COOs": "COO",
+        "vice presidents": "vicepresidente",
+        "vicepresidentes": "vicepresidente",
+        "presidents": "presidente",
+        "presidentes": "presidente",
+        "head of departments": "jefe de departamento",
+        "head of departments": "jefe de departamento",
+        "heads of department": "jefe de departamento",
+        "PMO directors": "director de PMO",
         
         # Legal
         "general counsels": "general counsel",
@@ -168,7 +185,7 @@ def singularize_role(role_generic: str) -> str:
         
         # Operaciones
         "responsables de logística": "responsable de logística",
-        "responsables de supply chain": "responsable de supply chain",
+        "responsables de supply chain": "responsable de logística",
         "responsables de fulfillment": "responsable de fulfillment",
         "responsables de servicio al cliente": "responsable de servicio al cliente",
         "responsables de seguridad e higiene": "responsable de seguridad e higiene",
@@ -322,7 +339,7 @@ OWNERS = [
     r"\bowner(s)?\b", r"\bpropietari[oa]s?\b",
     r"\bdue[nñ][oa]s?\b",
     r"\bsoci[oa]s?\b", r"\bpartner(s)?\b",
-    r"\bpresident(e|a)?\b", r"\bchair(man|woman)?\b"
+    r"\bchair(man|woman)?\b"
 ]
 
 GENERAL_MANAGEMENT = [
@@ -484,12 +501,14 @@ PM_PATTERN = r"(?:\bproject (manager|lead|director)\b|\bjefe de proyecto(s)?\b|\
 # ---- Títulos "sueltos" (sin área/dep) que deben contar como C-Suite
 SOLO_TITLES = [
     (r"^\s*vp\s*$|^\s*vice ?president(e)?\s*$", "vicepresidentes"),
+    (r"^\s*president(e)?\s*$", "presidentes"),
     (r"^\s*director(a)?\s*$",                  "directores"),
     (r"^\s*gerente\s*$",                       "gerentes"),
     (r"^\s*manager\s*$",                       "managers"),
     (r"^\s*ejecutiv[oa]s?\s*$",               "ejecutivos"),
     (r"^\s*administraci[óo]n\s*$",            "responsables de administración"),
     (r"^\s*administrativ[oa]s?\s*$",          "administrativos"),
+    (r"^\s*head of department\s*$",           "jefes de departamento"),
 ]
 
 # ---- Departamentos "solo" (nombres/abreviaturas) -> responsables de {dep}
@@ -538,7 +557,8 @@ OPS_HINTS = [
 
 # ---------------- Seniorities genéricos (forman “{seniority} de {área}”) ----------------
 GEN_SENIORITIES: List[Tuple[str, str]] = [
-    (r"(?:\bhead\b|\bdirect(or|ora)\b|VP|vice ?president(e)?)", "directores"),
+    (r"(?:\bhead\b|\bdirect(or|ora)\b)", "directores"),
+    (r"(?:\bvp\b|\bvice ?president(e)?)", "vicepresidentes"),
     (r"(?:\bmanager\b|\bgerente\b)",                            "gerentes"),
     (r"(?:\bjef[ea]\b|\bprincipal\b|\blead\b|\bleader\b)", "jefes"),
     (r"(?:\bcoordinador(a)?\b|\bcoordinator\b)",                "coordinadores"),
@@ -756,6 +776,7 @@ SPECIAL_PRODUCT: List[Tuple[str, str]] = [
 SPECIAL_PROJECTS: List[Tuple[str, str]] = [
     (r"(?:project manager|pm\b|gestor de proyectos|jefe de proyecto)", "project managers"),
     (r"(?:project director|director de proyectos)",                    "directores de proyectos"),
+    (r"(?:pmo\s+director|director\s+pmo|director de pmo)",             "directores de PMO"),
     (r"(?:project coordinator|coordinador de proyectos)",              "coordinadores de proyectos"),
     (r"(?:project lead|líder de proyecto)",                            "líderes de proyectos"),
     (r"(?:pmo|project management office|oficina de proyectos)",        "responsables de PMO"),
