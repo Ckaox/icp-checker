@@ -96,6 +96,7 @@ def singularize_role(role_generic: str) -> str:
         "directores regionales": "director regional",
         "jefes de departamento": "jefe de departamento",
         "directores de administración": "director de administración",
+        "responsables de administración": "responsable de administración",
         
         # Tecnología
         "gerentes de tecnología": "gerente de tecnología",
@@ -114,6 +115,7 @@ def singularize_role(role_generic: str) -> str:
         
         # Marketing
         "gerentes de marketing": "gerente de marketing",
+        "jefes de marketing": "jefe de marketing",
         "gerentes de marca": "gerente de marca",
         "gerentes de contenido": "gerente de contenido",
         "equipos de marketing": "equipo de marketing",
@@ -121,12 +123,14 @@ def singularize_role(role_generic: str) -> str:
         
         # Ventas
         "gerentes de ventas": "gerente de ventas",
+        "jefes de ventas": "jefe de ventas",
         "account managers": "account manager",
         "account executives": "account executive",
         "directores de ventas": "director de ventas",
         
         # Finanzas
         "gerentes de finanzas": "gerente de finanzas",
+        "jefes de finanzas": "jefe de finanzas",
         "directores financieros": "director financiero",
         "responsables de control de gestión": "responsable de control de gestión",
         "responsables contables": "responsable contable",
@@ -184,6 +188,7 @@ def singularize_role(role_generic: str) -> str:
         "responsables de privacidad": "responsable de privacidad",
         
         # Operaciones
+        "jefes de operaciones": "jefe de operaciones",
         "responsables de logística": "responsable de logística",
         "responsables de supply chain": "responsable de logística",
         "responsables de fulfillment": "responsable de fulfillment",
