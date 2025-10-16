@@ -174,6 +174,11 @@ def singularize_role(role_generic: str) -> str:
         "directoras de contratación": "directora de contratación",
         "formadores técnicos": "formador técnico",
         "formadoras técnicas": "formadora técnica",
+        "encargados de rr. hh.": "encargado de rr. hh.",
+        "encargadas de rr. hh.": "encargada de rr. hh.",
+        "encargados de recursos humanos": "encargado de recursos humanos",
+        "encargadas de recursos humanos": "encargada de recursos humanos",
+        "responsables de desarrollo": "responsable de desarrollo",
         "puestos de recursos humanos": "puesto de recursos humanos",
         
         # Legal
@@ -352,6 +357,8 @@ FAST_PATTERNS = {
     r"^t[eé]cnic[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("técnicos de rrhh", "RR.HH."),
     r"^administrativ[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("administrativos de rr. hh.", "RR.HH."),
     r"^responsables?\s+de\s+selecci[oó]n\s+de\s+personal$": ("responsables de selección de personal", "RR.HH."),
+    r"^encargad[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("encargados de rr. hh.", "RR.HH."),
+    r"^desarrollo\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("responsables de desarrollo", "RR.HH."),
     r"^formador(?:a)?(?:es)?\s+t[eé]cnic[oa]s?$": ("formadores técnicos", "RR.HH."),
     
     # Technical roles (very common)
@@ -517,8 +524,10 @@ SENIORITY_COMMON = [
     r"\bvp\b|\bvice ?president(e)?\b",
     r"\bhead\b|\bdirect(or|ora)\b|\bdireccion\b|\bdirecci[oó]n\b",
     r"\bmanager\b|\bgerente\b|\bjef[ea]\b|\bresponsable\b|\blead\b|\bprincipal\b|\bleader\b",
+    r"\bencargad[oa]s?\b",  # Encargado/a
     r"\bcoordinador(a)?\b|\bcoordinator\b",
     r"\bstrategist\b|\bestratega\b",
+    r"\bdesarrollo\b|\bdevelopment\b",  # Desarrollo
     r"\bejecutiv[oa]s?\b|\bexecutive\b",
     r"\bgestor(es)?\b",
     r"\badministrador(a)?\b|\badministrator\b",
@@ -830,6 +839,12 @@ SPECIAL_HR: List[Tuple[str, str]] = [
     
     # Formadores / Trainers
     (r"(?:formador(?:a)?\s+t[eé]cnic[oa])", "formadores técnicos"),
+    
+    # Encargados
+    (r"(?:encargad[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "encargados de rr. hh."),
+    
+    # Desarrollo
+    (r"(?:desarrollo\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "responsables de desarrollo"),
     
     # Puestos generales
     (r"(?:puestos?\s+de\s+recursos\s+humanos)", "puestos de recursos humanos"),
