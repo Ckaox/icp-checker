@@ -146,11 +146,35 @@ def singularize_role(role_generic: str) -> str:
         "gerentes de recursos humanos": "gerente de recursos humanos",
         "gerentes de rrhh": "gerente de rrhh",
         "directores de rrhh": "director de rrhh",
+        "directoras de rrhh": "directora de rrhh",
+        "directores de recursos humanos": "director de recursos humanos",
+        "directoras de recursos humanos": "directora de recursos humanos",
+        "directores de hr": "director de hr",
+        "directoras de hr": "directora de hr",
         "reclutadores": "reclutador",
         "business partners de rr. hh.": "business partner de rr. hh.",
         "responsables de nómina": "responsable de nómina",
         "responsables de compensaciones y beneficios": "responsable de compensaciones y beneficios",
         "responsables de capacitación": "responsable de capacitación",
+        "generalistas de rr. hh.": "generalista de rr. hh.",
+        "generalistas de recursos humanos": "generalista de recursos humanos",
+        "generalistas de hr": "generalista de hr",
+        "técnicos de rrhh": "técnico de rrhh",
+        "técnicas de rrhh": "técnica de rrhh",
+        "técnicos de recursos humanos": "técnico de recursos humanos",
+        "técnicas de recursos humanos": "técnica de recursos humanos",
+        "responsables de selección de personal": "responsable de selección de personal",
+        "directores de desarrollo": "director de desarrollo",
+        "directoras de desarrollo": "directora de desarrollo",
+        "administrativos de rr. hh.": "administrativo de rr. hh.",
+        "administrativas de rr. hh.": "administrativa de rr. hh.",
+        "administrativos de rrhh": "administrativo de rrhh",
+        "administrativas de rrhh": "administrativa de rrhh",
+        "directores de contratación": "director de contratación",
+        "directoras de contratación": "directora de contratación",
+        "formadores técnicos": "formador técnico",
+        "formadoras técnicas": "formadora técnica",
+        "puestos de recursos humanos": "puesto de recursos humanos",
         
         # Legal
         "gerentes legales": "gerente legal",
@@ -291,6 +315,8 @@ FAST_PATTERNS = {
     r"\bcoo\b": ("COOs", "Ejecutivo"),
     r"\bcio\b": ("CIOs", "Tecnologia"),
     r"\bchro\b": ("CHROs", "RR.HH."),
+    r"\bcpo\b": ("CHROs", "RR.HH."),
+    r"\bchief people officer\b": ("CHROs", "RR.HH."),
     r"\bcso\b": ("CSOs", "Ventas"),
     r"\bcro\b": ("CROs", "Ventas"),
     
@@ -298,6 +324,10 @@ FAST_PATTERNS = {
     r"^marketing\s+manager$": ("gerentes de marketing", "Marketing"),
     r"^sales\s+manager$": ("gerentes de ventas", "Ventas"),
     r"^hr\s+manager$": ("gerentes de recursos humanos", "RR.HH."),
+    r"^hr\s+generalist$": ("generalistas de rr. hh.", "RR.HH."),
+    r"^human\s+resources\s+generalist$": ("generalistas de rr. hh.", "RR.HH."),
+    r"^hrbp$": ("business partners de rr. hh.", "RR.HH."),
+    r"^talent\s+acquisition$": ("reclutadores", "RR.HH."),
     r"^it\s+manager$": ("gerentes de tecnologia", "Tecnologia"),
     r"^product\s+manager$": ("product managers", "Producto"),
     r"^project\s+manager$": ("project managers", "Tecnologia"),
@@ -315,11 +345,27 @@ FAST_PATTERNS = {
     r"^directores?\s+de\s+marketing$": ("directores de marketing", "Marketing"),
     r"^directores?\s+de\s+ventas$": ("directores de ventas", "Ventas"),
     r"^directores?\s+de\s+finanzas$": ("directores de finanzas", "Finanzas"),
+    r"^director(?:a)?s?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("directores de rrhh", "RR.HH."),
+    r"^director(?:a)?s?\s+de\s+desarrollo$": ("directores de desarrollo", "RR.HH."),
+    r"^director(?:a)?s?\s+de\s+contrataci[oó]n$": ("directores de contratación", "RR.HH."),
+    r"^generalistas?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("generalistas de rr. hh.", "RR.HH."),
+    r"^t[eé]cnic[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("técnicos de rrhh", "RR.HH."),
+    r"^administrativ[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("administrativos de rr. hh.", "RR.HH."),
+    r"^responsables?\s+de\s+selecci[oó]n\s+de\s+personal$": ("responsables de selección de personal", "RR.HH."),
+    r"^formador(?:a)?(?:es)?\s+t[eé]cnic[oa]s?$": ("formadores técnicos", "RR.HH."),
     
     # Technical roles (very common)
     r"^software\s+engineer$": ("encargados de tecnologia", "Tecnologia"),
     r"^data\s+scientist$": ("encargados de tecnologia", "Tecnologia"),
     r"^system\s+administrator$": ("administradores de sistemas", "Tecnologia"),
+    
+    # HR specific roles (English)
+    r"^hr\s+technician$": ("técnicos de rrhh", "RR.HH."),
+    r"^human\s+resources\s+technician$": ("técnicos de rrhh", "RR.HH."),
+    r"^chief\s+people\s+and\s+culture\s+officer$": ("CHROs", "RR.HH."),
+    r"^chief\s+hr\s+officer$": ("CHROs", "RR.HH."),
+    r"^r&d\s+director$": ("directores de desarrollo", "RR.HH."),
+    r"^hiring\s+director$": ("directores de contratación", "RR.HH."),
     
     # New optimized roles
     r"^chief\s+marketing$": ("CMOs", "Marketing"),
@@ -489,11 +535,21 @@ SENIORITY_COMMON = [
     r"\bconsultant\b|\bconsultor(a)?\b",
     r"\bplanner\b|\bplanificador(a)?\b",  # Agregado para Financial Planner
     r"\brecruiter\b|\breclutador(a)?\b",  # Agregado para Recruiter
+    # Roles de RR.HH. específicos
+    r"\bgeneralist\b|\bgeneralista\b",  # HR Generalist
+    r"\bt[eé]cnic[oa]s?\b|\btechnician\b",  # Técnico/a
+    r"\badministrativ[oa]s?\b",  # Administrativo/a
+    r"\bformador(a|es)?\b|\btrainer\b",  # Formador/a
+    r"\bacquisition\b",  # Talent Acquisition
+    r"\bhrbp\b|\bbusiness partner\b",  # HRBP
+    r"\bchief\b",  # Chief (CPO, CHRO, etc.)
+    r"\bpuesto(s)?\b",  # Puesto(s)
+    r"\badministraci[oó]n\b",  # Administración
 ]
 
 EXCLUDE_COMMON = [
     r"\bjunior\b|\bjr\b", r"\btrainee\b|\bbecari[oa]\b|\bintern\b",
-    r"\bassistant\b|\basistente\b",
+    r"\bassistant\b|\basistente\b|\bauxiliar(es)?\b",  # Excluir auxiliar y assistant
     r"\bcommunity\b|\bartist\b|\bart\b",
     r"\bdesign\b|\bdise[nñ]o\b|\badvisor\b",
     # Removido: analytics, analista, data - ahora son roles válidos
@@ -741,12 +797,50 @@ SPECIAL_FIN: List[Tuple[str, str]] = [
 
 # RRHH
 SPECIAL_HR: List[Tuple[str, str]] = [
-    (r"(?:director\s+de\s+rr\.?\s*hh\.?|director\s+de\s+recursos\s+humanos)", "directores de rrhh"),
-    (r"(?:recruit(ing|er)?|selecci[oó]n|acquisition|acquisitions?)", "reclutadores"),
-    (r"(?:hrbp|people partner|business partner)",                   "business partners de rr. hh."),
-    (r"(?:payroll|n[oó]mina)",                                      "responsables de nómina"),
-    (r"(?:compensation|benefits|total rewards|compensaciones|beneficios)", "responsables de compensaciones y beneficios"),
-    (r"(?:training|learning|l&d|learning and development|capacitaci[oó]n)", "responsables de capacitación"),
+    # Directores / Directors (con variaciones de género y departamento)
+    (r"(?:director(?:a)?\s+de\s+(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr|human\s+resources))", "directores de rrhh"),
+    (r"(?:director(?:a)?\s+de\s+desarrollo)", "directores de desarrollo"),
+    (r"(?:director(?:a)?\s+de\s+contrataci[oó]n|hiring\s+director)", "directores de contratación"),
+    
+    # Chief / C-Suite
+    (r"(?:chief\s+people\s+officer|cpo\b)", "CHROs"),
+    (r"(?:chief\s+people\s+and\s+culture\s+officer|cpco\b)", "CHROs"),
+    (r"(?:chief\s+hr(?:\s+officer)?|chief\s+human\s+resources(?:\s+officer)?)", "CHROs"),
+    
+    # Talent Acquisition / Reclutamiento
+    (r"(?:talent\s+acquisition|acquisitions?)", "reclutadores"),
+    (r"(?:recruit(ing|er)?|selecci[oó]n\s+de\s+personal|selección)", "reclutadores"),
+    (r"(?:responsable\s+de\s+selecci[oó]n\s+de\s+personal)", "responsables de selección de personal"),
+    
+    # HRBP / Business Partner
+    (r"(?:hrbp|people\s+partner|business\s+partner(?:\s+(?:de|of)\s+(?:rr\.?\s*hh\.?|hr|human\s+resources))?)", "business partners de rr. hh."),
+    
+    # Generalistas / Generalists
+    (r"(?:hr\s+generalist|human\s+resources\s+generalist)", "generalistas de rr. hh."),
+    (r"(?:generalista(?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "generalistas de rr. hh."),
+    
+    # Técnicos / Technicians
+    (r"(?:t[eé]cnic[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos))", "técnicos de rrhh"),
+    (r"(?:hr\s+technician|human\s+resources\s+technician)", "técnicos de rrhh"),
+    
+    # Administrativos
+    (r"(?:administrativ[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|personal))", "administrativos de rr. hh."),
+    (r"(?:administraci[oó]n\s+de\s+personal)", "administrativos de rr. hh."),
+    (r"(?:puestos?\s+de\s+recursos\s+humanos)", "administrativos de rr. hh."),
+    
+    # Formadores / Trainers
+    (r"(?:formador(?:a)?\s+t[eé]cnic[oa])", "formadores técnicos"),
+    
+    # Puestos generales
+    (r"(?:puestos?\s+de\s+recursos\s+humanos)", "puestos de recursos humanos"),
+    
+    # R&D Director (puede ser confundido con RR.HH. por las siglas)
+    (r"(?:r&d\s+director|director\s+de\s+i\+d)", "directores de desarrollo"),
+    
+    # Otros roles específicos
+    (r"(?:payroll|n[oó]mina)", "responsables de nómina"),
+    (r"(?:compensation|benefits|total\s+rewards|compensaciones|beneficios)", "responsables de compensaciones y beneficios"),
+    (r"(?:training|learning|l&d|learning\s+and\s+development|capacitaci[oó]n)", "responsables de capacitación"),
 ]
 
 # Legal
@@ -920,10 +1014,16 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
     ("RR. HH.", {
         "must": [
             r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|talent|\brrhh\b|\brr\.?\s*hh\.?)",
-            r"\brecruit(er|ing)?\b|\breclutamiento\b",  # Agregado para Recruiter
-            r"\bcompensation\b|\bcompensaciones\b",  # Agregado para Compensation Manager
-            r"\btraining\b|\bcapacitaci[oó]n\b",  # Agregado para Training Manager
-            r"\bpayroll\b|\bn[oó]mina\b",  # Agregado para Payroll Manager
+            r"\brecruit(er|ing)?\b|\breclutamiento\b|\bselecci[oó]n\b",  # Reclutamiento y selección
+            r"\bcompensation\b|\bcompensaciones\b",  # Compensaciones
+            r"\btraining\b|\bcapacitaci[oó]n\b|\bformador\b",  # Training y formación
+            r"\bpayroll\b|\bn[oó]mina\b",  # Nómina
+            r"\bhrbp\b|\bbusiness partner\b",  # Business Partner
+            r"\bgeneralist\b|\bgeneralista\b",  # Generalista
+            r"\bt[eé]cnic[oa]\b",  # Técnico/a (cuando está en contexto de RRHH)
+            r"\bacquisition\b|\bacquisitions\b",  # Talent Acquisition
+            r"\bchief people officer\b|\bcpo\b|\bchief hr\b|\bchro\b",  # C-Suite HR
+            r"\badministraci[oó]n de personal\b",  # Administración de personal
         ],
         "seniority": SENIORITY_COMMON,
         "exclude": EXCLUDE_COMMON,
