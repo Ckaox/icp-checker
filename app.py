@@ -142,40 +142,33 @@ def singularize_role(role_generic: str) -> str:
         "responsables de proyectos": "responsable de proyectos",
         "responsables de operaciones": "responsable de operaciones",
         
-        # RR.HH.
+        # Recursos Humanos
         "gerentes de recursos humanos": "gerente de recursos humanos",
-        "gerentes de rrhh": "gerente de rrhh",
-        "directores de rrhh": "director de rrhh",
-        "directoras de rrhh": "directora de rrhh",
         "directores de recursos humanos": "director de recursos humanos",
         "directoras de recursos humanos": "directora de recursos humanos",
-        "directores de hr": "director de hr",
-        "directoras de hr": "directora de hr",
+        "jefes de recursos humanos": "jefe de recursos humanos",
+        "responsables de recursos humanos": "responsable de recursos humanos",
         "reclutadores": "reclutador",
-        "business partners de rr. hh.": "business partner de rr. hh.",
+        "partners de recursos humanos": "partner de recursos humanos",
+        "generalistas de recursos humanos": "generalista de recursos humanos",
+        "técnicos de recursos humanos": "técnico de recursos humanos",
+        "administrativos de recursos humanos": "administrativo de recursos humanos",
+        "encargados de recursos humanos": "encargado de recursos humanos",
         "responsables de nómina": "responsable de nómina",
         "responsables de compensaciones y beneficios": "responsable de compensaciones y beneficios",
         "responsables de capacitación": "responsable de capacitación",
-        "generalistas de rr. hh.": "generalista de rr. hh.",
-        "generalistas de recursos humanos": "generalista de recursos humanos",
         "generalistas de hr": "generalista de hr",
-        "técnicos de rrhh": "técnico de rrhh",
-        "técnicas de rrhh": "técnica de rrhh",
         "técnicos de recursos humanos": "técnico de recursos humanos",
         "técnicas de recursos humanos": "técnica de recursos humanos",
         "responsables de selección de personal": "responsable de selección de personal",
         "directores de desarrollo": "director de desarrollo",
         "directoras de desarrollo": "directora de desarrollo",
-        "administrativos de rr. hh.": "administrativo de rr. hh.",
-        "administrativas de rr. hh.": "administrativa de rr. hh.",
-        "administrativos de rrhh": "administrativo de rrhh",
-        "administrativas de rrhh": "administrativa de rrhh",
+        "administrativos de recursos humanos": "administrativo de recursos humanos",
+        "administrativas de recursos humanos": "administrativa de recursos humanos",
         "directores de contratación": "director de contratación",
         "directoras de contratación": "directora de contratación",
         "formadores técnicos": "formador técnico",
         "formadoras técnicas": "formadora técnica",
-        "encargados de rr. hh.": "encargado de rr. hh.",
-        "encargadas de rr. hh.": "encargada de rr. hh.",
         "encargados de recursos humanos": "encargado de recursos humanos",
         "encargadas de recursos humanos": "encargada de recursos humanos",
         "responsables de desarrollo": "responsable de desarrollo",
@@ -319,20 +312,20 @@ FAST_PATTERNS = {
     r"\bcmo\b": ("CMOs", "Marketing"),
     r"\bcoo\b": ("COOs", "Ejecutivo"),
     r"\bcio\b": ("CIOs", "Tecnologia"),
-    r"\bchro\b": ("CHROs", "RR.HH."),
-    r"\bcpo\b": ("CHROs", "RR.HH."),
-    r"\bchief people officer\b": ("CHROs", "RR.HH."),
+    r"\bchro\b": ("CHROs", "Recursos Humanos"),
+    r"\bcpo\b": ("CHROs", "Recursos Humanos"),
+    r"\bchief people officer\b": ("CHROs", "Recursos Humanos"),
     r"\bcso\b": ("CSOs", "Ventas"),
     r"\bcro\b": ("CROs", "Ventas"),
     
     # Ultra-common manager patterns
     r"^marketing\s+manager$": ("gerentes de marketing", "Marketing"),
     r"^sales\s+manager$": ("gerentes de ventas", "Ventas"),
-    r"^hr\s+manager$": ("gerentes de recursos humanos", "RR.HH."),
-    r"^hr\s+generalist$": ("generalistas de rr. hh.", "RR.HH."),
-    r"^human\s+resources\s+generalist$": ("generalistas de rr. hh.", "RR.HH."),
-    r"^hrbp$": ("business partners de rr. hh.", "RR.HH."),
-    r"^talent\s+acquisition$": ("reclutadores", "RR.HH."),
+    r"^hr\s+manager$": ("gerentes de recursos humanos", "Recursos Humanos"),
+    r"^hr\s+generalist$": ("generalistas de recursos humanos", "Recursos Humanos"),
+    r"^human\s+resources\s+generalist$": ("generalistas de recursos humanos", "Recursos Humanos"),
+    r"^hrbp$": ("partners de recursos humanos", "Recursos Humanos"),
+    r"^talent\s+acquisition$": ("reclutadores", "Recursos Humanos"),
     r"^it\s+manager$": ("gerentes de tecnologia", "Tecnologia"),
     r"^product\s+manager$": ("product managers", "Producto"),
     r"^project\s+manager$": ("project managers", "Tecnologia"),
@@ -343,23 +336,23 @@ FAST_PATTERNS = {
     # Spanish patterns
     r"^gerentes?\s+de\s+marketing$": ("gerentes de marketing", "Marketing"),
     r"^gerentes?\s+de\s+ventas$": ("gerentes de ventas", "Ventas"),
-    r"^gerentes?\s+de\s+recursos\s+humanos$": ("gerentes de recursos humanos", "RR.HH."),
+    r"^gerentes?\s+de\s+recursos\s+humanos$": ("gerentes de recursos humanos", "Recursos Humanos"),
     r"^gerentes?\s+de\s+tecnolog[íi]a$": ("gerentes de tecnologia", "Tecnologia"),
     r"^gerentes?\s+de\s+producto$": ("gerentes de producto", "Producto"),
     r"^gerentes?\s+de\s+proyectos$": ("gerentes de proyectos", "Proyectos"),
     r"^directores?\s+de\s+marketing$": ("directores de marketing", "Marketing"),
     r"^directores?\s+de\s+ventas$": ("directores de ventas", "Ventas"),
     r"^directores?\s+de\s+finanzas$": ("directores de finanzas", "Finanzas"),
-    r"^director(?:a)?s?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("directores de rrhh", "RR.HH."),
-    r"^director(?:a)?s?\s+de\s+desarrollo$": ("directores de desarrollo", "RR.HH."),
-    r"^director(?:a)?s?\s+de\s+contrataci[oó]n$": ("directores de contratación", "RR.HH."),
-    r"^generalistas?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("generalistas de rr. hh.", "RR.HH."),
-    r"^t[eé]cnic[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("técnicos de rrhh", "RR.HH."),
-    r"^administrativ[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("administrativos de rr. hh.", "RR.HH."),
-    r"^responsables?\s+de\s+selecci[oó]n\s+de\s+personal$": ("responsables de selección de personal", "RR.HH."),
-    r"^encargad[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("encargados de rr. hh.", "RR.HH."),
-    r"^desarrollo\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("responsables de desarrollo", "RR.HH."),
-    r"^formador(?:a)?(?:es)?\s+t[eé]cnic[oa]s?$": ("formadores técnicos", "RR.HH."),
+    r"^director(?:a)?s?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("directores de recursos humanos", "Recursos Humanos"),
+    r"^director(?:a)?s?\s+de\s+desarrollo$": ("directores de desarrollo", "Recursos Humanos"),
+    r"^director(?:a)?s?\s+de\s+contrataci[oó]n$": ("directores de contratación", "Recursos Humanos"),
+    r"^generalistas?\s+de\s+(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("generalistas de recursos humanos", "Recursos Humanos"),
+    r"^t[eé]cnic[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("técnicos de recursos humanos", "Recursos Humanos"),
+    r"^administrativ[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("administrativos de recursos humanos", "Recursos Humanos"),
+    r"^responsables?\s+de\s+selecci[oó]n\s+de\s+personal$": ("responsables de selección de personal", "Recursos Humanos"),
+    r"^encargad[oa]s?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("encargados de recursos humanos", "Recursos Humanos"),
+    r"^desarrollo\s+(?:de\s+)?(?:rr\.?\s*hh\.?|recursos\s+humanos)$": ("responsables de desarrollo", "Recursos Humanos"),
+    r"^formador(?:a)?(?:es)?\s+t[eé]cnic[oa]s?$": ("formadores técnicos", "Recursos Humanos"),
     
     # Technical roles (very common)
     r"^software\s+engineer$": ("encargados de tecnologia", "Tecnologia"),
@@ -367,12 +360,12 @@ FAST_PATTERNS = {
     r"^system\s+administrator$": ("administradores de sistemas", "Tecnologia"),
     
     # HR specific roles (English)
-    r"^hr\s+technician$": ("técnicos de rrhh", "RR.HH."),
-    r"^human\s+resources\s+technician$": ("técnicos de rrhh", "RR.HH."),
-    r"^chief\s+people\s+and\s+culture\s+officer$": ("CHROs", "RR.HH."),
-    r"^chief\s+hr\s+officer$": ("CHROs", "RR.HH."),
-    r"^r&d\s+director$": ("directores de desarrollo", "RR.HH."),
-    r"^hiring\s+director$": ("directores de contratación", "RR.HH."),
+    r"^hr\s+technician$": ("técnicos de recursos humanos", "Recursos Humanos"),
+    r"^human\s+resources\s+technician$": ("técnicos de recursos humanos", "Recursos Humanos"),
+    r"^chief\s+people\s+and\s+culture\s+officer$": ("CHROs", "Recursos Humanos"),
+    r"^chief\s+hr\s+officer$": ("CHROs", "Recursos Humanos"),
+    r"^r&d\s+director$": ("directores de desarrollo", "Recursos Humanos"),
+    r"^hiring\s+director$": ("directores de contratación", "Recursos Humanos"),
     
     # New optimized roles
     r"^chief\s+marketing$": ("CMOs", "Marketing"),
@@ -511,7 +504,7 @@ C_SUITE_MAP: List[Tuple[List[str], str, str]] = [
     (["\\bceo\\b","chief executive officer"],                         "CEOs",          "Ejecutivo"),
     (["\\bcfo\\b","chief financial officer"],                         "CFOs",          "Ejecutivo"),
     (["\\bcdo\\b","chief data officer","chief digital officer"],      "CDOs",          "Ejecutivo"),
-    (["\\bchro\\b","chief human resources officer"],                  "CHROs",         "RR. HH."),
+    (["\\bchro\\b","chief human resources officer"],                  "CHROs",         "Recursos Humanos"),
     (["\\bcoo\\b","chief (of )?operations|chief operating( officer)?|operations officer"], "COOs","Ejecutivo"),
     (["\\bcao\\b","chief administrat(ive|ion) officer"],              "CAOs",          "Ejecutivo"),
     (["\\bcqa\\b","cqa"],                                             "CQAs",          "Tecnologia"),
@@ -544,7 +537,7 @@ SENIORITY_COMMON = [
     r"\bconsultant\b|\bconsultor(a)?\b",
     r"\bplanner\b|\bplanificador(a)?\b",  # Agregado para Financial Planner
     r"\brecruiter\b|\breclutador(a)?\b",  # Agregado para Recruiter
-    # Roles de RR.HH. específicos
+    # Roles de Recursos Humanos específicos
     r"\bgeneralist\b|\bgeneralista\b",  # HR Generalist
     r"\bt[eé]cnic[oa]s?\b|\btechnician\b",  # Técnico/a
     r"\badministrativ[oa]s?\b",  # Administrativo/a
@@ -591,9 +584,9 @@ DEPT_STANDALONE = [
     (r"^\s*(ventas|sales|comercial(?:es)?)\s*$",    ("Ventas", "responsables de ventas")),
     # Finanzas / Contabilidad
     (r"^\s*(finanzas?|finance|financial|contabilidad|accounting)\s*$", ("Finanzas", "responsables de finanzas")),
-    # RR. HH.
+    # Recursos Humanos
     (r"^\s*(rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos humanos|hr|human resources|people)\s*$",
-     ("RR. HH.", "responsables de recursos humanos")),
+     ("Recursos Humanos", "responsables de recursos humanos")),
     # Legal
     (r"^\s*(legal|jur[ií]dico|law|legal affairs)\s*$", ("Legal", "responsables de legal")),
     # Operaciones
@@ -709,7 +702,7 @@ FIN_AREAS = {
 }
 
 HR_AREAS = {
-    "rrhh":               r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b)",
+    "recursos humanos":   r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|\brrhh\b|rr\.?\s*hh\.?)",
     "talento":            r"(?:talent|talento|people operations|people ops|people partner)",
     "reclutamiento":      r"(?:recruit(ing|er)?|reclutamiento|selecci[oó]n|acquisition|acquisitions?)",
     "onboarding":         r"(?:onboarding|inducci[oó]n)",
@@ -804,10 +797,10 @@ SPECIAL_FIN: List[Tuple[str, str]] = [
     (FIN_AREAS["fp&a"],       "responsables de FP&A"),
 ]
 
-# RRHH
+# Recursos Humanos
 SPECIAL_HR: List[Tuple[str, str]] = [
     # Directores / Directors (con variaciones de género y departamento)
-    (r"(?:director(?:a)?\s+de\s+(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr|human\s+resources))", "directores de rrhh"),
+    (r"(?:director(?:a)?\s+de\s+(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr|human\s+resources))", "directores de recursos humanos"),
     (r"(?:director(?:a)?\s+de\s+desarrollo)", "directores de desarrollo"),
     (r"(?:director(?:a)?\s+de\s+contrataci[oó]n|hiring\s+director)", "directores de contratación"),
     
@@ -821,27 +814,27 @@ SPECIAL_HR: List[Tuple[str, str]] = [
     (r"(?:recruit(ing|er)?|selecci[oó]n\s+de\s+personal|selección)", "reclutadores"),
     (r"(?:responsable\s+de\s+selecci[oó]n\s+de\s+personal)", "responsables de selección de personal"),
     
-    # HRBP / Business Partner
-    (r"(?:hrbp|people\s+partner|business\s+partner(?:\s+(?:de|of)\s+(?:rr\.?\s*hh\.?|hr|human\s+resources))?)", "business partners de rr. hh."),
+    # HRBP / Partner de Recursos Humanos
+    (r"(?:hrbp|people\s+partner|business\s+partner(?:\s+(?:de|of)\s+(?:rr\.?\s*hh\.?|hr|human\s+resources))?)", "partners de recursos humanos"),
     
     # Generalistas / Generalists
-    (r"(?:hr\s+generalist|human\s+resources\s+generalist)", "generalistas de rr. hh."),
-    (r"(?:generalista(?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "generalistas de rr. hh."),
+    (r"(?:hr\s+generalist|human\s+resources\s+generalist)", "generalistas de recursos humanos"),
+    (r"(?:generalista(?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "generalistas de recursos humanos"),
     
     # Técnicos / Technicians
-    (r"(?:t[eé]cnic[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos))", "técnicos de rrhh"),
-    (r"(?:hr\s+technician|human\s+resources\s+technician)", "técnicos de rrhh"),
+    (r"(?:t[eé]cnic[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos))", "técnicos de recursos humanos"),
+    (r"(?:hr\s+technician|human\s+resources\s+technician)", "técnicos de recursos humanos"),
     
     # Administrativos
-    (r"(?:administrativ[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|personal))", "administrativos de rr. hh."),
-    (r"(?:administraci[oó]n\s+de\s+personal)", "administrativos de rr. hh."),
-    (r"(?:puestos?\s+de\s+recursos\s+humanos)", "administrativos de rr. hh."),
+    (r"(?:administrativ[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|personal))", "administrativos de recursos humanos"),
+    (r"(?:administraci[oó]n\s+de\s+personal)", "administrativos de recursos humanos"),
+    (r"(?:puestos?\s+de\s+recursos\s+humanos)", "administrativos de recursos humanos"),
     
     # Formadores / Trainers
     (r"(?:formador(?:a)?\s+t[eé]cnic[oa])", "formadores técnicos"),
     
     # Encargados
-    (r"(?:encargad[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "encargados de rr. hh."),
+    (r"(?:encargad[oa](?:s)?\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "encargados de recursos humanos"),
     
     # Desarrollo
     (r"(?:desarrollo\s+(?:de\s+)?(?:rr\.?\s*hh\.?|r\.?\s*r\.?\s*h\.?\s*h\.?|recursos\s+humanos|hr))", "responsables de desarrollo"),
@@ -849,7 +842,7 @@ SPECIAL_HR: List[Tuple[str, str]] = [
     # Puestos generales
     (r"(?:puestos?\s+de\s+recursos\s+humanos)", "puestos de recursos humanos"),
     
-    # R&D Director (puede ser confundido con RR.HH. por las siglas)
+    # R&D Director (puede ser confundido con Recursos Humanos por las siglas)
     (r"(?:r&d\s+director|director\s+de\s+i\+d)", "directores de desarrollo"),
     
     # Otros roles específicos
@@ -932,7 +925,7 @@ def detect_subdivision(text: str, department: str) -> str:
         "Ventas": SALES_SUBDIVISIONS,
         "Finanzas": FINANCE_SUBDIVISIONS,
         "Operaciones": OPERATIONS_SUBDIVISIONS,
-        "RR. HH.": HR_SUBDIVISIONS,
+        "Recursos Humanos": HR_SUBDIVISIONS,
         "Producto": PRODUCT_SUBDIVISIONS,
         "Proyectos": PROJECTS_SUBDIVISIONS,
     }
@@ -1026,7 +1019,7 @@ DEPARTMENTS: List[Tuple[str, Dict[str, Any]]] = [
         "exclude": EXCLUDE_COMMON + [r"\bkey\b"],
         "areas": FIN_AREAS, "specials": SPECIAL_FIN,
     }),
-    ("RR. HH.", {
+    ("Recursos Humanos", {
         "must": [
             r"(?:recursos humanos|human resources|\bhr\b|\bpeople\b|talent|\brrhh\b|\brr\.?\s*hh\.?)",
             r"\brecruit(er|ing)?\b|\breclutamiento\b|\bselecci[oó]n\b",  # Reclutamiento y selección
