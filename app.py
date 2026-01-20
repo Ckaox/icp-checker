@@ -11,6 +11,13 @@ app = FastAPI(
     default_response_class=ORJSONResponse  # Faster JSON serialization
 )
 
+# Status with / "ok"
+@app.get("/")
+def root():
+    return {"status": "ok"}
+
+
+
 # Add gzip compression for faster responses
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
